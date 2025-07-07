@@ -1,0 +1,101 @@
+package admin
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
+	"github.com/panzerit/runway/internal/config"
+	"github.com/panzerit/runway/internal/template"
+)
+
+func getLoginHandler(c echo.Context) error {
+	// if there is a token cookie, check if it's valid
+	// and if so, redirect to dashboard
+	tokenCookie, err := c.Cookie("token")
+	if err == nil && tokenCookie != nil && tokenCookie.Value != "" {
+		// Validate JWT token
+		jwtToken, err := jwt.Parse(tokenCookie.Value, func(token *jwt.Token) (interface{}, error) {
+			// Ensure the signing method is what you expect
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method")
+			}
+			return []byte(config.AdminConfig.JWTSecret), nil // Replace with your secret
+		})
+		if err == nil && jwtToken.Valid {
+			return c.Redirect(http.StatusPermanentRedirect, "/admin")
+		}
+	}
+
+	content := template.Page("Login", template.Login())
+	return content.Render(c.Request().Context(), c.Response().Writer)
+}
+
+type jwtCustomClaims struct {
+	Name  string `json:"name"`
+	Admin bool   `json:"admin"`
+	jwt.RegisteredClaims
+}
+
+type postLoginHandlerRequest struct {
+	UserName string `form:"username"`
+	Password string `form:"password"`
+}
+
+type postLoginHandlerResponse struct {
+	Token string `json:"token"`
+}
+
+func postLoginHandler(c echo.Context) error {
+	var req postLoginHandlerRequest
+	if err := c.Bind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+	}
+
+	if req.UserName != "user" || req.Password != "pw" {
+		return echo.ErrUnauthorized
+	}
+
+	claims := &jwtCustomClaims{
+		"John Doe",
+		true,
+		jwt.RegisteredClaims{
+			Subject:   "john@doe.com",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	t, err := token.SignedString([]byte(config.AdminConfig.JWTSecret))
+	if err != nil {
+		return err
+	}
+
+	c.SetCookie(&http.Cookie{
+		Name:     "token",
+		Value:    t,
+		Path:     "/",
+		Expires:  time.Now().Add(time.Hour),
+		HttpOnly: true,
+		Secure:   false, // set to true if using HTTPS
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	return c.Redirect(http.StatusMovedPermanently, "/admin")
+}
+
+func logoutHandler(c echo.Context) error {
+	// Clear the token cookie
+	c.SetCookie(&http.Cookie{
+		Name:    "token",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Now().Add(-time.Hour),
+	})
+
+	content := template.Logout()
+	return content.Render(c.Request().Context(), c.Response().Writer)
+}

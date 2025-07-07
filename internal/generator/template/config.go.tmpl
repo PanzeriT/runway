@@ -1,0 +1,14 @@
+{{ define "config.go" }}
+package config
+
+type adminconf struct {
+	jwtsecret string
+	err       error
+}
+
+func (ac adminconf) isvalid() bool {
+	return ac.err == nil
+}
+
+var adminconfig = adminconf{}
+{{ end }}

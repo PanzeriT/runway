@@ -1,0 +1,24 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  dev:generate:
+    cmds:
+      - air -build.full_bin "./runway -o ../runway-test generate"
+    silent: true
+
+  template:
+    cmds:
+      - templ generate --watch
+    silent: true
+
+  template:regenerate:
+    cmds:
+      - find . -type f -name "*_templ.go" | xargs rm {}
+      - templ generate
+    silent: true
+
+  default:
+    deps:
+      - dev:generate

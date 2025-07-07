@@ -1,0 +1,33 @@
+package admin
+
+import (
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
+	"github.com/panzerit/runway/internal/config"
+)
+
+func CreateRoutes(e *echo.Echo) {
+	// load config
+	config.MustLoadConfig()
+
+	// public routes
+	e.GET("/login", getLoginHandler)
+	e.POST("/login", postLoginHandler)
+
+	// create the restricted routes (r)
+	r := e.Group("/admin")
+
+	config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtCustomClaims)
+		},
+		SigningKey:  []byte(config.AdminConfig.JWTSecret),
+		TokenLookup: "cookie:token",
+	}
+
+	r.Use(echojwt.WithConfig(config))
+
+	r.GET("", dashboardHandler)
+	r.GET("/logout", logoutHandler)
+}
