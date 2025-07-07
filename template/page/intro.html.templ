@@ -1,0 +1,40 @@
+package page 
+
+import (
+	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/template/html"
+	"github.com/panzerit/runway/template/layout"
+)
+
+templ Intro(title string, user *data.User, year int) {
+	@layout.Base(title, user) {
+		<header class="flex items-center justify-center py-8">
+			<img src="/image/hero.webp" alt="Runway Hero Image" class="h-128 w-auto"/>
+		</header>
+		<main class="flex flex-1 flex-col items-center justify-center">
+			@html.H1() {
+				Welcome to Runway
+			}
+			@html.H2() {
+				You are ready for take-off.
+			}
+			<div class="flex space-x-6">
+				@html.Link(
+					"https://github.com/panzerit/runway",
+					html.WithTarget("_blank"),
+				) {
+					Runway GitHub Repo
+				}
+				@html.Link(
+					"/",
+					html.WithTarget("_blank"),
+				) {
+					Help
+				}
+			</div>
+		</main>
+		<footer class="text-center py-4 text-gray-400 text-sm">
+			&copy; { year } Thomas Panzeri
+		</footer>
+	}
+}

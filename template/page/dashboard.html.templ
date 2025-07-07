@@ -1,0 +1,28 @@
+package page
+
+import (
+	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/template/html"
+	"github.com/panzerit/runway/template/layout"
+	"github.com/panzerit/runway/template/partial"
+)
+
+templ Dashboard(title string, user *data.User, userCount int) {
+	@layout.Base(title, user) {
+		@html.H1() {
+			{ user.Name }
+		}
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+			<div x-data="{ usersCount }" class="bg-white p-6 rounded shadow text-center">
+				<div class="text-sm font-medium text-gray-500 mb-2">Registered Users</div>
+				<div class="text-3xl font-bold text-blue-600" x-text="value"></div>
+			</div>
+		</div>
+		@html.LinkButton(
+			"/admin/table",
+		) {
+			Users
+		}
+		@partial.Table()
+	}
+}

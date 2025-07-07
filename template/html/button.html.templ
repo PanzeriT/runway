@@ -1,0 +1,12 @@
+package html
+
+templ Button(value, typ, name string) {
+	<button
+		type="{ typ }"
+		name="{ name }"
+		value="{ value }"
+		class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-800 transition-colors"
+	>
+		{ value }
+	</button>
+}

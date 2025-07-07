@@ -1,0 +1,32 @@
+version: '3'
+
+tasks:
+  clean:
+    cmds:
+      - task: template:regenerate
+      - task: format
+      - go mod tidy
+    silent: true
+
+  format:
+    cmds:
+      - go fmt ./...
+      - templ fmt .
+
+  template:
+    cmds:
+      - templ generate --watch
+    silent: true
+
+  template:remove:
+    cmds:
+      - cmd: find . -type f -name "*_templ.go" | xargs rm {}
+        ignore_error: true
+    silent: true
+
+  template:regenerate:
+    deps:
+      - template:remove
+    cmds:
+      - templ generate
+    silent: true

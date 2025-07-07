@@ -1,0 +1,35 @@
+package layout
+
+import (
+	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/template/partial"
+)
+
+templ Base(title string, user *data.User) {
+	<!DOCTYPE html>
+	@partial.Head(title)
+	<html lang="en" class="h-full bg-gray-100">
+		<body class="h-full">
+			<div class="min-h-screen flex flex-col">
+				@partial.Header(title, user)
+				<main class="flex-grow p-6">
+					{ children... }
+				</main>
+			</div>
+		</body>
+	</html>
+}
+
+templ BaseNoHeader(title string, user *data.User) {
+	<!DOCTYPE html>
+	@partial.Head(title)
+	<html lang="en" class="h-full bg-gray-100">
+		<body class="h-full">
+			<div class="mt-16 min-h-screen flex flex-col">
+				<main class="flex-grow p-6">
+					{ children... }
+				</main>
+			</div>
+		</body>
+	</html>
+}

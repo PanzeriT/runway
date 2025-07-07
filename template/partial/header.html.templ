@@ -1,0 +1,22 @@
+package partial
+
+import "github.com/panzerit/runway/data"
+
+templ Header(title string, user *data.User) {
+	<header class="bg-white shadow p-4 flex justify-between items-center">
+		if user != nil {
+			<a href="/admin">
+				<span class="text-xl font-semibold text-gray-800">
+					{ title }
+				</span>
+			</a>
+		} else {
+			<a href="/">
+				<span class="text-xl font-semibold text-gray-800">
+					{ title }
+				</span>
+			</a>
+		}
+		@LoginLink(user)
+	</header>
+}

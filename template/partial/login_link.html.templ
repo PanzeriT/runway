@@ -1,0 +1,22 @@
+package partial
+
+import (
+	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/template/html"
+)
+
+templ LoginLink(user *data.User) {
+	if user != nil {
+		@html.Link(
+			"/admin/logout",
+		) {
+			Logout
+		}
+	} else {
+		@html.Link(
+			"/login",
+		) {
+			Login
+		}
+	}
+}

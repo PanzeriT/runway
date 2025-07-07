@@ -1,0 +1,70 @@
+package html
+
+type linkOptionalArgs struct {
+	asButton bool
+	target   string
+	hxGet    string
+	hxTarget string
+}
+
+type linkOptionFunc func(*linkOptionalArgs)
+
+func asButton() linkOptionFunc {
+	return func(args *linkOptionalArgs) {
+		args.asButton = true
+	}
+}
+
+func WithTarget(target string) linkOptionFunc {
+	return func(args *linkOptionalArgs) {
+		args.target = target
+	}
+}
+func WithHxGet(hxGet string) linkOptionFunc {
+	return func(args *linkOptionalArgs) {
+		args.hxGet = hxGet
+	}
+}
+
+func WithHxTarget(hxTarget string) linkOptionFunc {
+	return func(args *linkOptionalArgs) {
+		args.hxTarget = hxTarget
+	}
+}
+
+func LinkButton(href string, optionalArgs ...linkOptionFunc) templ.Component {
+	optionalArgs = append(optionalArgs, asButton())
+	return Link(href, optionalArgs...)
+}
+
+func Link(href string, optionalArgs ...linkOptionFunc) templ.Component {
+	args := &linkOptionalArgs{}
+
+	for _, arg := range optionalArgs {
+		arg(args)
+	}
+
+	return link(href, args)
+}
+
+templ link(href string, args *linkOptionalArgs) {
+	<a
+		href={ href }
+		if args.asButton {
+			class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-800 transition-colors"
+		} else {
+			class="text-blue-600 hover:underline text-lg font-medium"
+		}
+		if args.target != "" {
+			target={ args.target }
+		}
+		if args.hxGet != "" {
+			hx-get={ args.hxGet }
+		}
+		if args.hxTarget != "" {
+			hx-target={ args.hxTarget }
+		}
+	>
+		{ children... }
+	</a>
+}

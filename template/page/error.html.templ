@@ -1,0 +1,62 @@
+package page 
+
+import (
+	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/template/html"
+	"github.com/panzerit/runway/template/layout"
+)
+
+type HttpError struct {
+	StatusCode  int    `json:"status_code"`
+	Message     string `json:"message"`
+	Description string `json:"description"`
+}
+
+type OptionFunc func(*HttpError)
+
+func NewHttpError(statusCode int, opts ...OptionFunc) HttpError {
+	e := &HttpError{
+		StatusCode:  statusCode,
+		Message:     "Internal Server Error",
+		Description: "An unexpected error occurred.",
+	}
+
+	for _, o := range opts {
+		o(e)
+	}
+	return *e
+}
+
+func WithMessage(message string) OptionFunc {
+	return func(e *HttpError) {
+		e.Message = message
+	}
+}
+
+func WithDescription(description string) OptionFunc {
+	return func(e *HttpError) {
+		e.Description = description
+	}
+}
+
+func (e *HttpError) Error() string {
+	return e.Message
+}
+
+templ Error(title string, user *data.User, e HttpError) {
+	@layout.BaseNoHeader(title, user) {
+		<div class="text-center">
+			<div class="text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800 mb-4">
+				{ e.StatusCode }
+			</div>
+			<h1 class="text-3xl md:text-4xl font-bold text-gray-600 mb-2">{ e.Message }</h1>
+			<p class="text-lg text-grayd-600 mb-6">{ e.Description }</p>
+			@html.LinkButton("/") {
+				Goto to Homepage
+			}
+			<div class="mt-8">
+				<img src="/image/hero.webp" alt="Logo" class="mx-auto h-64 w-auto opacity-70"/>
+			</div>
+		</div>
+	}
+}

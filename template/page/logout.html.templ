@@ -1,0 +1,24 @@
+package page
+
+import (
+	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/template/html"
+	"github.com/panzerit/runway/template/layout"
+)
+
+templ Logout(title string, user *data.User) {
+	@layout.Base(title, user) {
+		<div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+			<p>
+				You successfully logged out.
+			</p>
+			<p class="mt-8">
+				@html.LinkButton(
+					"/login",
+				) {
+					Login again
+				}
+			</p>
+		</div>
+	}
+}

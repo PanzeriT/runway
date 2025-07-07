@@ -1,0 +1,15 @@
+# Mac files
+.DS_Store
+
+# generated binaries
+main
+runway
+
+# build artifacts
+tmp/
+
+# local configuration
+.vscode/
+
+# quick notes
+TODO
