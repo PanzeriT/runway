@@ -4,7 +4,7 @@ package admin
 
 import (
 	"fmt"
-	"{{ .ModuleName }}/internal/config"
+	"mytest/internal/config"
 	"net/http"
 	"time"
 
@@ -30,7 +30,7 @@ func getLoginHandler(c echo.Context) error {
 		}
 	}
 
-	return c.String(http.StatusOK, "Login page should be here.")
+  return c.Render(http.StatusOK, "login", nil)
 }
 
 type jwtCustomClaims struct {

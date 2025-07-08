@@ -147,7 +147,12 @@ func (g Generator) writeFile(relPath, name string, data any) error {
 }
 
 func (g Generator) copyHTMLTemplates() {
-	os.CopyFS(filepath.Join(g.outputDir, "internal/server/template"), admin.Templates)
+	dir := filepath.Join(g.outputDir, "internal/server")
+
+	// delete the old files first
+	os.RemoveAll(filepath.Join(dir, "templates"))
+
+	os.CopyFS(dir, admin.Templates)
 }
 
 func (g Generator) processSchemas() {

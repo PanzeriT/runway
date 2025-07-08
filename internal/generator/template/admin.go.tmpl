@@ -3,19 +3,38 @@
 package admin
 
 import (
+	"{{ .ModuleName }}/internal/config"
+  "io"
+  "html/template"
+
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
-	"{{ .ModuleName }}/internal/config"
 )
+
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
 
 func CreateRoutes(e *echo.Echo) {
 	// load config
 	config.MustLoadConfig()
 
+	// load templates
+	e.Renderer = &Template{
+		templates: template.Must(template.ParseGlob("internal/server/template/*.html.tmpl")),
+	}
+
 	// public routes
 	e.GET("/login", getLoginHandler)
 	e.POST("/login", postLoginHandler)
+
+	// TODO: for testing only, remove	later
+	e.GET("/dashboard", dashboardHandler)
 
 	// create the restricted routes (r)
 	r := e.Group("/admin")
