@@ -1,14 +1,30 @@
 {{ define "config.go" }}
+{{ template "warning.go" . }}
 package config
 
-type adminconf struct {
-	jwtsecret string
-	err       error
+import "strings"
+
+type AdminConf struct {
+	JWTSecret string
+	err       []error
 }
 
-func (ac adminconf) isvalid() bool {
+func (ac AdminConf) IsValid() bool {
 	return ac.err == nil
 }
 
-var adminconfig = adminconf{}
+func (ac *AdminConf) AddError(err error) {
+	ac.err = append(ac.err, err)
+}
+
+func (ac AdminConf) Error() string {
+	var sb strings.Builder
+
+	for _, e := range ac.err {
+		sb.WriteString(e.Error())
+	}
+	return sb.String()
+}
+
+var AdminConfig = AdminConf{}
 {{ end }}

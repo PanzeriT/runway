@@ -1,4 +1,5 @@
 {{ define "loader.go" }}
+{{ template "warning.go" . }}
 package config
 
 import (
@@ -6,8 +7,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/joho/godotenv"
-	"{{ .ModuleName }}/shared/exit"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 type envionmentContraints interface {
@@ -17,21 +17,17 @@ type envionmentContraints interface {
 func getenv(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		AdminConfig.err = fmt.Errorf("%s is undefined; %v", key, AdminConfig.err)
+		AdminConfig.AddError(fmt.Errorf("  - %s is undefined", key))
 	}
 	return value
 }
 
 func MustLoadConfig() {
-	err := godotenv.Load()
-	if err != nil {
-		slog.Error("unable to load configuration", "err", err)
-	}
-
 	AdminConfig.JWTSecret = getenv("JWT_SECRET")
 
 	if !AdminConfig.IsValid() {
-		exit.WithCode(exit.ConfigurationError, AdminConfig.err)
+		fmt.Printf("Configuration is invalid, please check your environment variables:\n%s\n", AdminConfig.Error())
+		os.Exit(1)
 	}
 
 	// logger config

@@ -1,14 +1,15 @@
+{{ define "auth.go" }}
+{{ template "warning.go" . }}
 package admin
 
 import (
 	"fmt"
+	"mytest/internal/config"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/panzerit/runway/internal/config"
-	"github.com/panzerit/runway/internal/template"
 )
 
 func getLoginHandler(c echo.Context) error {
@@ -29,8 +30,7 @@ func getLoginHandler(c echo.Context) error {
 		}
 	}
 
-	content := template.Page("Login", template.Login())
-	return content.Render(c.Request().Context(), c.Response().Writer)
+	return c.String(http.StatusOK, "Login page should be here.")
 }
 
 type jwtCustomClaims struct {
@@ -96,6 +96,6 @@ func logoutHandler(c echo.Context) error {
 		Expires: time.Now().Add(-time.Hour),
 	})
 
-	content := template.Logout()
-	return content.Render(c.Request().Context(), c.Response().Writer)
+	return c.String(http.StatusOK, "Logout page should be here.")
 }
+{{ end }}

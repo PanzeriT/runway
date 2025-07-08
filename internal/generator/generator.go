@@ -7,9 +7,11 @@ import (
 	"go/token"
 	"html/template"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/panzerit/runway/internal/admin"
 	"github.com/spf13/viper"
 )
 
@@ -65,8 +67,9 @@ func WithOutputDir(name string) OptionFunc {
 }
 
 func (g Generator) Run() {
-	g.generateStaticFiles()
 	g.generateMainGo()
+	g.generateStaticFiles()
+	g.copyHTMLTemplates()
 	// g.processSchemas()  TODO: activate again
 }
 
@@ -99,22 +102,24 @@ func (g *Generator) SaveConfig() {
 }
 
 type StaticFile struct {
-	moduleName string
-	filePath   string
+	filePath string
+	data     any
 }
 
 func (g Generator) generateStaticFiles() {
 	staticFiles := []StaticFile{
-		{"config", "./internal/config/config.go"},
-		{"config", "./internal/config/loader.go"},
+		{filePath: "./internal/config/config.go"},
+		{filePath: "./internal/config/loader.go"},
 
-		{"admin", "./internal/server/admin/admin.go"},
+		{filePath: "./internal/server/admin/admin.go"},
+		{filePath: "./internal/server/admin/auth.go"},
+		{filePath: "./internal/server/admin/dashboard.go"},
 	}
 
 	for _, s := range staticFiles {
 		parts := strings.Split(s.filePath, "/")
 		g.writeFile(s.filePath, parts[len(parts)-1], map[string]string{
-			"ModuleName": s.moduleName,
+			"ModuleName": viper.GetString("module_name"),
 		})
 	}
 }
@@ -135,6 +140,10 @@ func (g Generator) writeFile(relPath, name string, data any) error {
 	debug("wrote file", filePath)
 
 	return nil
+}
+
+func (g Generator) copyHTMLTemplates() {
+	os.CopyFS(filepath.Join(g.outputDir, "internal/server/template"), admin.Templates)
 }
 
 func (g Generator) processSchemas() {
@@ -184,5 +193,10 @@ func (g Generator) processSchemas() {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	fmt.Println("DONE!")
+
+	fmt.Println("Tidy up...")
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Run()
+
+	fmt.Println("Done!")
 }
