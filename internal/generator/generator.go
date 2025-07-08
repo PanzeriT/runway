@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 type Generator struct {
@@ -83,6 +85,9 @@ func (g Generator) generateMainGo() {
 }
 
 func (g *Generator) Init(module_name string) *Generator {
+	viper.Set("module_name", module_name)
+	viper.WriteConfig()
+
 	g.writeFile("go.mod", "go.mod", map[string]string{
 		"ModuleName": module_name,
 	})

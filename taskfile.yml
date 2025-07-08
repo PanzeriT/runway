@@ -8,6 +8,11 @@ tasks:
       - air -build.full_bin "./runway -o ../runway-test generate"
     silent: true
 
+  dev:init:
+    cmds:
+      - air -build.full_bin "./runway -o ../runway-test init mytest -f"
+    silent: true
+
   template:
     cmds:
       - templ generate --watch

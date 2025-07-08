@@ -42,6 +42,11 @@ func init() {
 			cfgFile := filepath.Join(path, "config.yaml")
 			viper.SetConfigFile(cfgFile)
 
+			// skip the configuration step for the init command
+			if cmd.Name() == "init" {
+				return
+			}
+
 			err = viper.ReadInConfig()
 			generator.CheckError(err, generator.ErrMissingConfiguration,
 				fmt.Sprintf("No configuration file found (%s). Please run 'runway init <module_name>' to start a new project.", cfgFile))
