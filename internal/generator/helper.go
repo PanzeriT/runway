@@ -11,6 +11,9 @@ type exitCode int
 
 const (
 	Success exitCode = iota
+	ErrInvalidFlag
+	ErrUnableToDetermineWorkingDirectory
+	ErrMissingConfiguration
 	ErrCreatingFile
 	ErrWritingFile
 )
@@ -20,7 +23,7 @@ func terminate(reason string, code exitCode) {
 	os.Exit(int(code))
 }
 
-func checkError(err error, code exitCode, message ...string) {
+func CheckError(err error, code exitCode, message ...string) {
 	if err == nil {
 		return
 	}
@@ -38,7 +41,7 @@ func checkError(err error, code exitCode, message ...string) {
 		sb.WriteString(m)
 	}
 
-	terminate(fmt.Sprintf("%s (%s)\n", err.Error(), sb.String()), code)
+	terminate(sb.String(), code)
 }
 
 func debug(a ...any) {

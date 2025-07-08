@@ -24,7 +24,7 @@ type OptionFunc func(*Generator) *Generator
 func (g *Generator) loadDefaults() {
 	if g.mainDir == "" {
 		mainDir, err := os.Getwd()
-		checkError(err, 1, "Error getting current directory")
+		CheckError(err, 1, "Error getting current directory")
 		g.mainDir = mainDir
 	}
 
@@ -72,20 +72,25 @@ func (g *Generator) loadTemplates() {
 	templatePath := filepath.Join(g.mainDir, "/internal/generator/template/*.tmpl")
 	debug("Loading templates...", templatePath)
 	template, err := template.ParseGlob(templatePath)
-	checkError(err, Success)
+	CheckError(err, Success)
 
 	g.template = template
 }
 
 func (g Generator) generateMainGo() {
 	err := g.writeFile("main.go", "main.go", nil)
-	checkError(err, ErrWritingFile)
+	CheckError(err, ErrWritingFile)
 }
 
-func (g Generator) Init(module_name string) {
+func (g *Generator) Init(module_name string) *Generator {
 	g.writeFile("go.mod", "go.mod", map[string]string{
 		"ModuleName": module_name,
 	})
+
+	return g
+}
+
+func (g *Generator) SaveConfig() {
 }
 
 type StaticFile struct {
@@ -114,7 +119,7 @@ func (g Generator) writeFile(relPath, name string, data any) error {
 	os.MkdirAll(filepath.Dir(filePath), 0755)
 
 	f, err := os.Create(filePath)
-	checkError(err, ErrCreatingFile, filePath)
+	CheckError(err, ErrCreatingFile, filePath)
 	defer f.Close()
 
 	err = g.template.ExecuteTemplate(f, name, data)

@@ -36,7 +36,8 @@ var initCmd = &cobra.Command{
 		}
 
 		generator.New(generator.WithOutputDir(outputDir)).
-			Init(args[0])
+			Init(args[0]).
+			SaveConfig()
 	},
 }
 
