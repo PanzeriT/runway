@@ -3,6 +3,11 @@
 version: '3'
 
 tasks:
+  build:
+    cmds:
+      - go build -o runway main.go
+    silent: true
+
   dev:generate:
     cmds:
       - air -build.full_bin "./runway -o ../runway-test generate"

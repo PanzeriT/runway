@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"embed"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -14,6 +15,9 @@ import (
 	"github.com/panzerit/runway/internal/admin"
 	"github.com/spf13/viper"
 )
+
+//go:embed template/*.tmpl
+var Templates embed.FS
 
 type Generator struct {
 	mainDir   string
@@ -74,25 +78,25 @@ func (g Generator) Run() {
 }
 
 func (g *Generator) loadTemplates() {
-	templatePath := filepath.Join(g.mainDir, "/internal/generator/template/*.tmpl")
-	debug("Loading templates...", templatePath)
-	template, err := template.ParseGlob(templatePath)
+	template, err := template.New("generator").ParseFS(Templates, "template/*.tmpl")
 	CheckError(err, Success)
 
 	g.template = template
 }
 
 func (g Generator) generateMainGo() {
-	err := g.writeFile("main.go", "main.go", nil)
+	err := g.writeFile("main.go", "main.go", map[string]string{
+		"ModuleName": viper.GetString("module_name"),
+	})
 	CheckError(err, ErrWritingFile)
 }
 
-func (g *Generator) Init(module_name string) *Generator {
-	viper.Set("module_name", module_name)
+func (g *Generator) Init(moduleName string) *Generator {
+	viper.Set("module_name", moduleName)
 	viper.WriteConfig()
 
 	g.writeFile("go.mod", "go.mod", map[string]string{
-		"ModuleName": module_name,
+		"ModuleName": moduleName,
 	})
 
 	return g
