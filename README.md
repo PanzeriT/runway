@@ -8,12 +8,14 @@ minimal configuration, while still supporting custom logic and extensions. Its
 efficient, modular architecture makes it ideal for building modern web
 applications, prototypes, and internal tools with minimal overhead.
 
+![Gopher above runway](assets/hero.png "Happy Take Off")
+
 <!--toc:start-->
 
-- [Usage](#usage)
-- [Contribution](#contribution)
-  - [How to Contribute](#how-to-contribute)
-  <!--toc:end-->
+- [Runway](#runway)
+  - [Usage](#usage)
+  - [Contribution](#contribution)
+    - [How to Contribute](#how-to-contribute)
 
 ## Usage
 
