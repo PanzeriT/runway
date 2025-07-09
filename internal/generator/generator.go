@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/panzerit/runway/internal/admin"
+	"github.com/panzerit/runway/internal/server"
 	"github.com/spf13/viper"
 )
 
@@ -152,7 +152,7 @@ func (g Generator) copyHTMLTemplates() {
 	// delete the old files first
 	os.RemoveAll(filepath.Join(dir, "templates"))
 
-	os.CopyFS(dir, admin.Templates)
+	os.CopyFS(dir, server.Templates)
 }
 
 func (g Generator) processSchemas() {
