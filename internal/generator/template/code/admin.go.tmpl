@@ -8,8 +8,11 @@ import (
 	"html/template"
 	"io"
 	"{{ .ModuleName }}/internal/config"
+  "os"
 	"path/filepath"
+  "reflect"
 	"strings"
+  "time"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -40,7 +43,43 @@ func NewTemplateMap() *TemplateMap {
 	}
 }
 
-func (t *TemplateMap) Render(w io.Writer, page string, data any, c echo.Context) error {
+func ConverToMap(input interface{}) map[string]interface{} {
+	if input == nil {
+		return make(map[string]any)
+	}
+
+	switch v := input.(type) {
+	case map[string]interface{}:
+		return v
+	case *map[string]interface{}:
+		return *v
+	}
+
+	val := reflect.ValueOf(input)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	typ := val.Type()
+
+	if val.Kind() == reflect.Struct {
+		result := make(map[string]interface{})
+		for i := 0; i < val.NumField(); i++ {
+			field := typ.Field(i)
+			result[field.Name] = val.Field(i).Interface()
+		}
+		return result
+	}
+
+	// For int, string, etc.
+	return map[string]interface{}{"value": input}
+}
+
+func (t *TemplateMap) Render(w io.Writer, page string, data interface{}, c echo.Context) error {
+	dataMap := ConverToMap(data)
+
+	dataMap["Title"] = os.Getenv("APP_NAME")
+	dataMap["Year"] = time.Now().Year()
+
 	return t.templates[page].ExecuteTemplate(w, "base", data)
 }
 
@@ -70,12 +109,12 @@ func CreateRoutes(e *echo.Echo) {
   // set error handler
   e.HTTPErrorHandler = customHTTPErrorHandler
 
+	// static assets
+	e.Static("/", "internal/server/admin/asset")
+
 	// public routes
 	e.GET("/login", getLoginHandler)
 	e.POST("/login", postLoginHandler)
-
-	// TODO: for testing only, remove	later
-	e.GET("/dashboard", dashboardHandler)
 
 	// create the restricted routes (r)
 	r := e.Group("/admin")

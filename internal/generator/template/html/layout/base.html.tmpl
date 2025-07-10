@@ -12,14 +12,9 @@
   </head>
   <body class="h-full">
     <div class="min-h-screen flex flex-col">
-      <header class="bg-white shadow p-4 flex justify-between items-center">
-        <h1 class="text-xl font-semibold text-gray-800">
-          {{ .title }}
-        </h1>
-        <a href="/admin/logout" class="text-sm text-red-600 hover:underline">logout</a>
-      </header>
+      {{ template "header" . }}
       <main class="flex-grow p-6">
-        {{ template "content" }}
+        {{ template "content" . }}
       </main>
     </div>
   </body>

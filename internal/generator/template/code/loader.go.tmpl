@@ -23,6 +23,7 @@ func getenv(key string) string {
 }
 
 func MustLoadConfig() {
+  AdminConfig.AppName = getenv("APP_NAME")
 	AdminConfig.JWTSecret = getenv("JWT_SECRET")
 
 	if !AdminConfig.IsValid() {

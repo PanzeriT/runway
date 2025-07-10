@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"embed"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/panzerit/runway/internal/generator/asset"
 	"github.com/panzerit/runway/internal/generator/template/code"
 	"github.com/panzerit/runway/internal/generator/template/html"
 	"github.com/spf13/viper"
@@ -71,6 +73,7 @@ func (g Generator) Run() {
 	g.generateMainGo()
 	g.generateStaticFiles()
 	g.copyHTMLTemplates()
+	g.copyAssets()
 	// g.processSchemas()  TODO: activate again
 }
 
@@ -143,14 +146,22 @@ func (g Generator) writeFile(relPath, name string, data any) error {
 	return nil
 }
 
+func copFolders(src embed.FS, dest string) {
+	err := os.RemoveAll(filepath.Join(dest))
+	CheckError(err, ErrDeletingFile, dest)
+
+	err = os.CopyFS(dest, src)
+	CheckError(err, ErrCreatingFile, dest)
+}
+
 func (g Generator) copyHTMLTemplates() {
-	dir := filepath.Join(g.outputDir, "internal/server/admin/template")
+	dest := filepath.Join(g.outputDir, "internal/server/admin/template")
+	copFolders(html.FS, dest)
+}
 
-	err := os.RemoveAll(filepath.Join(dir))
-	CheckError(err, ErrDeletingFile, dir)
-
-	err = os.CopyFS(dir, html.FS)
-	CheckError(err, ErrCreatingFile, dir)
+func (g Generator) copyAssets() {
+	dest := filepath.Join(g.outputDir, "internal/server/admin/asset")
+	copFolders(asset.FS, dest)
 }
 
 func (g Generator) processSchemas() {
