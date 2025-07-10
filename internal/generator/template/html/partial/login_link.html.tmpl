@@ -1,9 +1,9 @@
 {{ define "login_link" }}
-{{ if .User.IsAuthenticated }}
+{{ if .User }}
   <span class="text-sm text-gray-600">
     {{ .User.Name }} ({{ .User.Email }})
   </span>
-  <a href="/admin/logout" class="ml-4 text-sm text-blue-600 hover:underline">
+  <a href="/admin/logout" class="text-sm text-gray-600 hover:text-gray-900">
     Logout
   </a>
 {{ else }}

@@ -118,6 +118,7 @@ func (g Generator) generateStaticFiles() {
 		{filePath: "./internal/server/admin/admin.go"},
 		{filePath: "./internal/server/admin/auth.go"},
 		{filePath: "./internal/server/admin/dashboard.go"},
+		{filePath: "./internal/server/admin/middleware.go"},
 	}
 
 	for _, s := range staticFiles {

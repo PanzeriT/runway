@@ -98,6 +98,6 @@ func logoutHandler(c echo.Context) error {
 		Expires: time.Now().Add(-time.Hour),
 	})
 
-	return c.String(http.StatusOK, "Logout page should be here.")
+	return c.Render(http.StatusOK, "logout", nil)
 }
 {{ end }}
