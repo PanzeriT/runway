@@ -16,6 +16,7 @@ const (
 	ErrMissingConfiguration
 	ErrCreatingFile
 	ErrWritingFile
+	ErrDeletingFile
 )
 
 func terminate(reason string, code exitCode) {
@@ -28,7 +29,9 @@ func CheckError(err error, code exitCode, message ...string) {
 		return
 	}
 
+	fmt.Println("Error:", err, message)
 	if len(message) == 0 {
+		fmt.Println(code)
 		terminate(err.Error(), code)
 	}
 

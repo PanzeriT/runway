@@ -1,0 +1,96 @@
+{{ define "admin.go" }}
+{{ template "warning.go" . }}
+package admin
+
+import (
+	"fmt"
+	"net/http"
+	"html/template"
+	"io"
+	"{{ .ModuleName }}/internal/config"
+	"path/filepath"
+	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
+)
+
+type TemplateMap struct {
+	templates map[string]*template.Template
+}
+
+func NewTemplateMap() *TemplateMap {
+	basePath := "internal/server/admin/template"
+	layouts, _ := filepath.Glob(filepath.Join(basePath, "layout", "*.html.tmpl"))
+	partials, _ := filepath.Glob(filepath.Join(basePath, "partial", "*.html.tmpl"))
+	pages, _ := filepath.Glob(filepath.Join(basePath, "page", "*.html.tmpl"))
+
+	buildingBlocks := append(layouts, partials...)
+	tmpls := make(map[string]*template.Template)
+
+	for _, p := range pages {
+		templateName := strings.Split(filepath.Base(p), ".")[0]
+		files := append(buildingBlocks, p)
+		tmpls[templateName] = template.Must(template.ParseFiles(files...))
+	}
+
+	return &TemplateMap{
+		templates: tmpls,
+	}
+}
+
+func (t *TemplateMap) Render(w io.Writer, page string, data any, c echo.Context) error {
+	return t.templates[page].ExecuteTemplate(w, "base", data)
+}
+
+func customHTTPErrorHandler(err error, c echo.Context) {
+	if c.Response().Committed {
+		return
+	}
+
+	code := http.StatusInternalServerError
+	if he, ok := err.(*echo.HTTPError); ok {
+		code = he.Code
+	}
+	c.Logger().Error(err)
+	errorPage := fmt.Sprintf("%d.html", code)
+	if err := c.File(errorPage); err != nil {
+		c.Logger().Error(err)
+	}
+}
+
+func CreateRoutes(e *echo.Echo) {
+	// load config
+	config.MustLoadConfig()
+
+	// load templates
+	e.Renderer = NewTemplateMap()
+
+  // set error handler
+  e.HTTPErrorHandler = customHTTPErrorHandler
+
+	// public routes
+	e.GET("/login", getLoginHandler)
+	e.POST("/login", postLoginHandler)
+
+	// TODO: for testing only, remove	later
+	e.GET("/dashboard", dashboardHandler)
+
+	// create the restricted routes (r)
+	r := e.Group("/admin")
+
+	config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtCustomClaims)
+		},
+		SigningKey:  []byte(config.AdminConfig.JWTSecret),
+		TokenLookup: "cookie:token",
+	}
+
+	r.Use(echojwt.WithConfig(config))
+
+	r.GET("", dashboardHandler)
+	r.GET("/logout", logoutHandler)
+}
+{{ end }}

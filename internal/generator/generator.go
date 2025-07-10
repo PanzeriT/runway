@@ -1,23 +1,20 @@
 package generator
 
 import (
-	"embed"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"html/template"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 
-	"github.com/panzerit/runway/internal/server"
+	"github.com/panzerit/runway/internal/generator/template/code"
+	"github.com/panzerit/runway/internal/generator/template/html"
 	"github.com/spf13/viper"
 )
-
-//go:embed template/*.tmpl
-var Templates embed.FS
 
 type Generator struct {
 	mainDir   string
@@ -78,7 +75,7 @@ func (g Generator) Run() {
 }
 
 func (g *Generator) loadTemplates() {
-	template, err := template.New("generator").ParseFS(Templates, "template/*.tmpl")
+	template, err := template.New("generator").ParseFS(code.FS, "*.tmpl")
 	CheckError(err, Success)
 
 	g.template = template
@@ -147,12 +144,13 @@ func (g Generator) writeFile(relPath, name string, data any) error {
 }
 
 func (g Generator) copyHTMLTemplates() {
-	dir := filepath.Join(g.outputDir, "internal/server")
+	dir := filepath.Join(g.outputDir, "internal/server/admin/template")
 
-	// delete the old files first
-	os.RemoveAll(filepath.Join(dir, "templates"))
+	err := os.RemoveAll(filepath.Join(dir))
+	CheckError(err, ErrDeletingFile, dir)
 
-	os.CopyFS(dir, server.Templates)
+	err = os.CopyFS(dir, html.FS)
+	CheckError(err, ErrCreatingFile, dir)
 }
 
 func (g Generator) processSchemas() {

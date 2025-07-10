@@ -30,7 +30,9 @@ func getLoginHandler(c echo.Context) error {
 		}
 	}
 
-  return c.Render(http.StatusOK, "login", nil)
+  return c.Render(http.StatusOK, "login", map[string]any{
+      "Template": "dashboard",
+    })
 }
 
 type jwtCustomClaims struct {

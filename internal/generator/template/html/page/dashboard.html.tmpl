@@ -1,4 +1,4 @@
-{{ define "dashboard" }}
+{{ define "content" }}
   <h1 class="text-2xl mb-4">Hello {{ .Name }}.</h1>
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 		<div x-data="{ value: 72 }" class="bg-white p-6 rounded shadow text-center">
@@ -16,6 +16,5 @@
 	</div>
 	<div hx-get="/table" hx-trigger="load" hx-target="#crud-table">
 		<div id="crud-table"></div>
-    {{ template "table" . }}
 	</div>
 {{ end }}
