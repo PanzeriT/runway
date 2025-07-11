@@ -47,12 +47,6 @@ func CheckError(err error, code exitCode, message ...string) {
 	terminate(sb.String(), code)
 }
 
-func debug(a ...any) {
-	if os.Getenv("DEBUG") == "" {
-		fmt.Println(a...)
-	}
-}
-
 func makePathAbsolute(path, base string) string {
 	if filepath.IsAbs(path) {
 		return path

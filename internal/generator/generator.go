@@ -23,10 +23,18 @@ type Generator struct {
 	outputDir string
 	schemaDir string
 
+	debugMode bool
+
 	template *template.Template
 }
 
 type OptionFunc func(*Generator) *Generator
+
+func (g *Generator) debug(a ...any) {
+	if g.debugMode {
+		fmt.Println(a...)
+	}
+}
 
 func (g *Generator) loadDefaults() {
 	if g.mainDir == "" {
@@ -56,7 +64,7 @@ func New(opts ...OptionFunc) *Generator {
 	g.loadDefaults()
 	g.loadTemplates()
 
-	debug(fmt.Sprintf("Generator initialized:\n  mainDir:   %s\n  outputDir: %s\n  schemaDir: %s",
+	g.debug(fmt.Sprintf("Generator initialized:\n  mainDir:   %s\n  outputDir: %s\n  schemaDir: %s",
 		g.mainDir, g.outputDir, g.schemaDir))
 
 	return g
@@ -142,7 +150,7 @@ func (g Generator) writeFile(relPath, name string, data any) error {
 		return err
 	}
 
-	debug("wrote file", filePath)
+	g.debug("wrote file", filePath)
 
 	return nil
 }

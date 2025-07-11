@@ -28,7 +28,9 @@ func Execute() {
 func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable the debug mode (prints out all the steps)")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "Specify the output directory for the new project (default is current directory)")
+
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		once.Do(func() {
 			path, err := rootCmd.PersistentFlags().GetString("output")

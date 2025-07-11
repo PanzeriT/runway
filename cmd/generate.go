@@ -17,7 +17,10 @@ var generateCmd = &cobra.Command{
 			outputDir = Must(os.Getwd())
 		}
 
-		generator.New(generator.WithOutputDir(outputDir)).
+		generator.New(
+			generator.WithOutputDir(outputDir),
+			generator.WithDebugMode(Must(cmd.Flags().GetBool("debug"))),
+		).
 			Run()
 	},
 }
