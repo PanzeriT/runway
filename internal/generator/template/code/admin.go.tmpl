@@ -1,5 +1,6 @@
-{{ define "admin.go" }}
+{{- define "admin.go" -}}
 {{ template "warning.go" . }}
+
 package admin
 
 import (
@@ -92,6 +93,12 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	if he, ok := err.(*echo.HTTPError); ok {
 		code = he.Code
 	}
+
+	if code == http.StatusNotFound {
+		c.Render(http.StatusNotFound, "404", nil)
+		return
+	}
+
 	c.Logger().Error(err)
 	errorPage := fmt.Sprintf("%d.html", code)
 	if err := c.File(errorPage); err != nil {
