@@ -1,11 +1,13 @@
 package generator
 
+// TODO: generator needs a defaul strct that can be passed as first argument for all pages
+
 import (
-	"embed"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,10 +79,17 @@ func WithOutputDir(name string) OptionFunc {
 	}
 }
 
+func WithDebugMode(on bool) OptionFunc {
+	return func(g *Generator) *Generator {
+		g.debugMode = on
+		return g
+	}
+}
+
 func (g Generator) Run() {
 	g.generateMainGo()
 	g.generateStaticFiles()
-	g.copyHTMLTemplates()
+	g.copyHTMLCode()
 	g.copyAssets()
 	// g.processSchemas()  TODO: activate again
 }
@@ -119,16 +128,19 @@ type StaticFile struct {
 }
 
 func (g Generator) generateStaticFiles() {
+	// TODO: find files automatically
 	staticFiles := []StaticFile{
 		{filePath: "./internal/config/config.go"},
 		{filePath: "./internal/config/loader.go"},
 
 		{filePath: "./internal/server/admin/admin.go"},
 		{filePath: "./internal/server/admin/auth.go"},
+		{filePath: "./internal/server/admin/data.go"},
 		{filePath: "./internal/server/admin/dashboard.go"},
 		{filePath: "./internal/server/admin/middleware.go"},
 	}
 
+	// TODO: this has to use the file system
 	for _, s := range staticFiles {
 		parts := strings.Split(s.filePath, "/")
 		g.writeFile(s.filePath, parts[len(parts)-1], map[string]string{
@@ -155,22 +167,39 @@ func (g Generator) writeFile(relPath, name string, data any) error {
 	return nil
 }
 
-func copFolders(src embed.FS, dest string) {
-	err := os.RemoveAll(filepath.Join(dest))
-	CheckError(err, ErrDeletingFile, dest)
+func (g Generator) copyHTMLCode() {
+	dst := filepath.Join(g.outputDir, "internal/server/admin/template")
 
-	err = os.CopyFS(dest, src)
-	CheckError(err, ErrCreatingFile, dest)
+	err := os.RemoveAll(dst)
+	CheckError(err, ErrDeletingFile, dst)
+
+	err = fs.WalkDir(html.FS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !d.IsDir() {
+			dstPath := getTemplateFileName(path)
+			err := copyFSFile(html.FS, path, filepath.Join(dst, dstPath))
+			CheckError(err, ErrCopyingFile, path)
+		} else {
+			os.MkdirAll(filepath.Join(dst, path), 0755)
+		}
+		return nil
+	})
+	CheckError(err, ErrCreatingFile)
 }
 
-func (g Generator) copyHTMLTemplates() {
-	dest := filepath.Join(g.outputDir, "internal/server/admin/template")
-	copFolders(html.FS, dest)
-}
-
+// copyAssets removes previous assets and copies new ones from the embedded asset
+// filesystem.
 func (g Generator) copyAssets() {
-	dest := filepath.Join(g.outputDir, "internal/server/admin/asset")
-	copFolders(asset.FS, dest)
+	dst := filepath.Join(g.outputDir, "internal/server/admin/asset")
+
+	err := os.RemoveAll(dst)
+	CheckError(err, ErrDeletingFile, dst)
+
+	err = os.CopyFS(dst, asset.FS)
+	CheckError(err, ErrCreatingFile, dst)
 }
 
 func (g Generator) processSchemas() {
@@ -226,4 +255,8 @@ func (g Generator) processSchemas() {
 	cmd.Run()
 
 	fmt.Println("Done!")
+}
+
+func getTemplateFileName(fileName string) string {
+return strings.ReplaceAll(fileName, "_templ", "")
 }

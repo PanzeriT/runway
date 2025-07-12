@@ -1,0 +1,14 @@
+{{- define "data.go" -}}
+{{ template "warning.go" . }}
+
+package admin
+
+type User struct {
+	Name string
+	Mail string
+}
+
+type Base struct {
+	User User
+}
+{{ end }}

@@ -1,4 +1,12 @@
-{{ define "content" }}
+package page
+
+import (
+	"MODULE_NAME/data"
+	"MODULE_NAME/template/layout"
+)
+
+templ Login(data data.Data) {
+  @layout.Base(data) {
 	<div class="max-w-md mx-auto bg-white p-6 rounded shadow">
 		<form action="/login" method="POST" class="space-y-4">
 			<div>
@@ -11,5 +19,6 @@
 			</div>
 			<button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
 		</form>
-{{ end }}
-
+	</div>
+}
+    }

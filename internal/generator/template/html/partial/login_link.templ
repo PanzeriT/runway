@@ -1,0 +1,20 @@
+package partial
+
+import (
+	"MODULE_NAME/data"
+)
+
+templ LoginLink(data.Base) {
+	if user != nil {
+		<span class="text-sm text-gay-600">
+			{ user.Name } { user.Mail }
+		</span>
+		<a href="/admin/logout" class="text-sm text-gray-600 hover:text-gray-900">
+			Logout
+		</a>
+	} else {
+		<a href="/login" class="text-sm text-gray-600 hover:text-gray-900">
+			Login
+		</a>
+	}
+}

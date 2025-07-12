@@ -1,0 +1,14 @@
+package partial
+
+import (
+	"MODULE_NAME/data"
+)
+
+templ Header(data data.Header) {
+	<header class="bg-white shadow p-4 flex justify-between items-center">
+		<h1 class="text-xl font-semibold text-gray-800">
+			{ title }
+		</h1>
+		@LoginLink(user)
+	</header>
+}

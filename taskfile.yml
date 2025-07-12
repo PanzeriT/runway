@@ -4,19 +4,37 @@ version: '3'
 
 tasks:
   build:
+    deps:
+      - format
     cmds:
       - go build -o runway main.go
     silent: true
 
   dev:generate:
+    deps:
+      - format
+      - template
+      - dev:generate:go
     cmds:
-      - air -build.full_bin "./runway -o ../runway-test generate"
     silent: true
 
-  dev:init:
+  dev:generate:go:
     cmds:
-      - air -build.full_bin "./runway -o ../runway-test init mytest -f"
+      - air -build.full_bin "./runway -o ../runway-test generate{{if .CLI_VERBOSE}} -d{{end}}"
     silent: true
+
+
+  dev:init:
+    deps:
+      - format
+    cmds:
+      - air -build.full_bin "./runway -o ../runway-test init mytest -f{{if .CLI_VERBOSE}} -d{{end}}"
+    silent: true
+
+  format:
+    cmds:
+      - go fmt ./...
+      - templ fmt .
 
   template:
     cmds:

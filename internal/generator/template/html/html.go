@@ -2,5 +2,5 @@ package html
 
 import "embed"
 
-//go:embed */*.tmpl
+//go:embed */*.go
 var FS embed.FS

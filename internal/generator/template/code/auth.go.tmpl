@@ -6,6 +6,8 @@ package admin
 import (
 	"fmt"
 	"mytest/internal/config"
+	"mytest/internal/server/admin/template/data"
+	"mytest/internal/server/admin/template/page"
 	"net/http"
 	"time"
 
@@ -31,9 +33,7 @@ func getLoginHandler(c echo.Context) error {
 		}
 	}
 
-  return c.Render(http.StatusOK, "login", map[string]any{
-      "Template": "dashboard",
-    })
+  return Render(c, http.StatusOK, page.Login("TITLE", &data.User{}))
 }
 
 type jwtCustomClaims struct {
@@ -99,6 +99,6 @@ func logoutHandler(c echo.Context) error {
 		Expires: time.Now().Add(-time.Hour),
 	})
 
-	return c.Render(http.StatusOK, "logout", nil)
+  return Render(c, http.StatusOK, page.Logout("TITLE", &data.User{}))
 }
 {{ end }}

@@ -1,0 +1,33 @@
+package page
+
+import (
+	"MODULE_NAME/data"
+	"MODULE_NAME/template/layout"
+)
+
+templ Intro(data.Base) {
+	@layout.Base(data) {
+		<div class="flex items-center justify-center py-8">
+			<img src="/image/hero.webp" alt="Runway Hero Image" class="h-128 w-auto"/>
+		</div>
+		<main class="flex flex-1 flex-col items-center justify-center">
+			<h1 class="text-3xl font-bold mb-6 text-gray-800">
+				Welcome to Runway
+			</h1>
+			<h2 class="text-xl mb-6 text-gray-800">
+				You are ready for takeoff!
+			</h2>
+			<div class="flex space-x-6">
+				<a href="https://github.com/panzerit/runway" target="_blank" class="text-blue-600 hover:underline text-lg font-medium">
+					Runway GitHub Repo
+				</a>
+				<a href="/help" class="text-blue-600 hover:underline text-lg font-medium">
+					Help
+				</a>
+			</div>
+		</main>
+		<footer class="text-center py-4 text-gray-400 text-sm">
+			&copy; { year } Thomas Panzeri
+		</footer>
+	}
+}

@@ -1,10 +1,15 @@
 package generator
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 type exitCode int
@@ -16,6 +21,7 @@ const (
 	ErrMissingConfiguration
 	ErrCreatingFile
 	ErrWritingFile
+	ErrCopyingFile
 	ErrDeletingFile
 )
 
@@ -52,4 +58,23 @@ func makePathAbsolute(path, base string) string {
 		return path
 	}
 	return filepath.Join(base, path)
+}
+
+func copyFSFile(srcFS fs.FS, src, dst string) error {
+	srcFile, err := srcFS.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	content, err := io.ReadAll(srcFile)
+	if err != nil {
+		return err
+	}
+
+	modified := bytes.ReplaceAll(content,
+		[]byte("MODULE_NAME"),
+		[]byte(viper.GetString("module_name")+"/internal/server/admin"),
+	)
+	return os.WriteFile(dst, modified, 0644)
 }

@@ -5,84 +5,16 @@ package admin
 
 import (
 	"fmt"
-	"net/http"
-	"html/template"
-	"io"
 	"{{ .ModuleName }}/internal/config"
-  "os"
-	"path/filepath"
-  "reflect"
-	"strings"
-  "time"
+	"{{ .ModuleName }}/internal/server/admin/template/data"
+	"{{ .ModuleName }}/internal/server/admin/template/page"
+	"net/http"
 
+	"github.com/a-h/templ"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 )
-
-type TemplateMap struct {
-	templates map[string]*template.Template
-}
-
-func NewTemplateMap() *TemplateMap {
-	basePath := "internal/server/admin/template"
-	layouts, _ := filepath.Glob(filepath.Join(basePath, "layout", "*.html.tmpl"))
-	partials, _ := filepath.Glob(filepath.Join(basePath, "partial", "*.html.tmpl"))
-	pages, _ := filepath.Glob(filepath.Join(basePath, "page", "*.html.tmpl"))
-
-	buildingBlocks := append(layouts, partials...)
-	tmpls := make(map[string]*template.Template)
-
-	for _, p := range pages {
-		templateName := strings.Split(filepath.Base(p), ".")[0]
-		files := append(buildingBlocks, p)
-		tmpls[templateName] = template.Must(template.ParseFiles(files...))
-	}
-
-	return &TemplateMap{
-		templates: tmpls,
-	}
-}
-
-func ConverToMap(input interface{}) map[string]interface{} {
-	if input == nil {
-		return make(map[string]any)
-	}
-
-	switch v := input.(type) {
-	case map[string]interface{}:
-		return v
-	case *map[string]interface{}:
-		return *v
-	}
-
-	val := reflect.ValueOf(input)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
-	typ := val.Type()
-
-	if val.Kind() == reflect.Struct {
-		result := make(map[string]interface{})
-		for i := 0; i < val.NumField(); i++ {
-			field := typ.Field(i)
-			result[field.Name] = val.Field(i).Interface()
-		}
-		return result
-	}
-
-	// For int, string, etc.
-	return map[string]interface{}{"value": input}
-}
-
-func (t *TemplateMap) Render(w io.Writer, page string, data interface{}, c echo.Context) error {
-	dataMap := ConverToMap(data)
-
-	dataMap["Title"] = os.Getenv("APP_NAME")
-	dataMap["Year"] = time.Now().Year()
-
-	return t.templates[page].ExecuteTemplate(w, "base", data)
-}
 
 func customHTTPErrorHandler(err error, c echo.Context) {
 	if c.Response().Committed {
@@ -95,7 +27,7 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	}
 
 	if code == http.StatusNotFound {
-		c.Render(http.StatusNotFound, "404", nil)
+		Render(c, http.StatusNotFound, page.NotFound("TITLE", &data.User{}))
 		return
 	}
 
@@ -104,17 +36,16 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	if err := c.File(errorPage); err != nil {
 		c.Logger().Error(err)
 	}
+
+	Render(c, http.StatusNotFound, page.ServerError("TITLE", &data.User{}))
 }
 
 func CreateRoutes(e *echo.Echo) {
 	// load config
 	config.MustLoadConfig()
 
-	// load templates
-	e.Renderer = NewTemplateMap()
-
-  // set error handler
-  e.HTTPErrorHandler = customHTTPErrorHandler
+	// set error handler
+	e.HTTPErrorHandler = customHTTPErrorHandler
 
 	// static assets
 	e.Static("/", "internal/server/admin/asset")
@@ -135,7 +66,7 @@ func CreateRoutes(e *echo.Echo) {
 	}
 
 	r.Use(echojwt.WithConfig(config))
-  r.Use(JWTExtractor)
+	r.Use(JWTExtractor)
 
 	r.GET("", dashboardHandler)
 	r.GET("/logout", logoutHandler)
