@@ -12,7 +12,6 @@ import (
 	"github.com/panzerit/runway/data"
 	"github.com/panzerit/runway/template/html"
 	"github.com/panzerit/runway/template/layout"
-	"github.com/panzerit/runway/template/partial"
 )
 
 func Dashboard(title string, user *data.User, userCount int) templ.Component {
@@ -63,7 +62,7 @@ func Dashboard(title string, user *data.User, userCount int) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(user.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `template/page/dashboard.html.templ`, Line: 13, Col: 14}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `template/page/dashboard.html.templ`, Line: 12, Col: 14}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -98,16 +97,8 @@ func Dashboard(title string, user *data.User, userCount int) templ.Component {
 				return nil
 			})
 			templ_7745c5c3_Err = html.LinkButton(
-				"/admin/table",
+				"/admin/model/user",
 			).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = partial.Table().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

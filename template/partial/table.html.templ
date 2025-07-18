@@ -1,30 +1,37 @@
 package partial
 
-import "github.com/panzerit/runway/template/html"
+import (
+	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/template/html"
+)
 
-templ Table() {
+templ Table(columns data.Columns, data [][]string) {
 	<div class="bg-white p-4 rounded shadow">
 		<table class="min-w-full text-sm text-left">
 			<thead>
 				<tr class="bg-gray-100">
-					<th class="px-4 py-2">Column 1</th>
-					<th class="px-4 py-2">Column 2</th>
-					<th class="px-4 py-2">Column 3</th>
-					<th class="px-4 py-2">Actions</th>
+					for _, c := range columns {
+						<th class="px-4 py-2">{ c.Name }</th>
+					}
+					<th class="px-4 py-2"></th>
 				</tr>
 			</thead>
 			<tbody>
+      for i := range data {
 				<tr>
-					<td class="px-4 py-2">Data 1</td>
-					<td class="px-4 py-2">Data 2</td>
-					<td class="px-4 py-2">Data 3</td>
-					<td class="px-4 py-2 space-x-2">
+          for j := range data[i] {
+            <td>
+{ data[i][j] }
+            </td>
+          }
+          <td>
 						@html.LinkButton("") {
 							Edit
 						}
 						<button class="text-red-500" hx-delete="/items/1" hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML">Delete</button>
-					</td>
+          </td>
 				</tr>
+      }
 			</tbody>
 		</table>
 	</div>

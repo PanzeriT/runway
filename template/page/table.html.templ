@@ -7,11 +7,11 @@ import (
 	"github.com/panzerit/runway/template/partial"
 )
 
-templ Table(title string, user *data.User) {
+templ Table(title string, user *data.User, columns data.Columns, data [][]string) {
 	@layout.Base(title, user) {
 		@html.H1() {
 			Users
 		}
-		@partial.Table()
+		@partial.Table(columns, data)
 	}
 }

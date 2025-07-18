@@ -4,7 +4,6 @@ import (
 	"github.com/panzerit/runway/data"
 	"github.com/panzerit/runway/template/html"
 	"github.com/panzerit/runway/template/layout"
-	"github.com/panzerit/runway/template/partial"
 )
 
 templ Dashboard(title string, user *data.User, userCount int) {
@@ -19,10 +18,9 @@ templ Dashboard(title string, user *data.User, userCount int) {
 			</div>
 		</div>
 		@html.LinkButton(
-			"/admin/table",
+			"/admin/model/user",
 		) {
 			Users
 		}
-		@partial.Table()
 	}
 }

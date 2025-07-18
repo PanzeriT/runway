@@ -10,6 +10,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/panzerit/runway/asset"
+	"github.com/panzerit/runway/model"
 	"github.com/panzerit/runway/template/page"
 	"gorm.io/gorm"
 )
@@ -29,8 +30,12 @@ func New(name, jwtSecret string, db *gorm.DB) *App {
 	app := &App{
 		name:      name,
 		jwtSecret: jwtSecret,
+		db:        db,
 		server:    server,
 	}
+
+	// apply migrations
+	db.AutoMigrate(&model.User{})
 
 	app.server.HTTPErrorHandler = app.customHTTPErrorHandler
 	app.server.StaticFS("/", echo.MustSubFS(asset.FS, "./"))
@@ -64,7 +69,7 @@ func (a *App) addPrivateRoutes() {
 	r.GET("", a.dashboardHandler)
 	r.GET("/logout", a.logoutHandler)
 
-	r.GET("/table", a.tableHandler)
+	r.GET("/model/:model", a.tableHandler)
 }
 
 func (a *App) Start() {
