@@ -9,5 +9,5 @@ import (
 func (a *App) dashboardHandler(c echo.Context) error {
 	uc := c.(*data.UserContext)
 
-	return Render(c, 200, page.Dashboard(a.Name, &uc.User, 0))
+	return Render(c, 200, page.Dashboard(a.name, &uc.User, 0))
 }

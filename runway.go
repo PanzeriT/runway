@@ -15,10 +15,10 @@ import (
 )
 
 type App struct {
-	Name      string
-	JWTSecret string
-	DB        *gorm.DB
-	Server    *echo.Echo
+	name      string
+	jwtSecret string
+	db        *gorm.DB
+	server    *echo.Echo
 }
 
 func New(name, jwtSecret string, db *gorm.DB) *App {
@@ -27,13 +27,13 @@ func New(name, jwtSecret string, db *gorm.DB) *App {
 	MustMeetSecretCriteria(jwtSecret)
 
 	app := &App{
-		Name:      name,
-		JWTSecret: jwtSecret,
-		Server:    server,
+		name:      name,
+		jwtSecret: jwtSecret,
+		server:    server,
 	}
 
-	app.Server.HTTPErrorHandler = app.customHTTPErrorHandler
-	app.Server.StaticFS("/", echo.MustSubFS(asset.FS, "./"))
+	app.server.HTTPErrorHandler = app.customHTTPErrorHandler
+	app.server.StaticFS("/", echo.MustSubFS(asset.FS, "./"))
 	app.addPublicRoutes()
 	app.addPrivateRoutes()
 
@@ -41,20 +41,20 @@ func New(name, jwtSecret string, db *gorm.DB) *App {
 }
 
 func (a *App) addPublicRoutes() {
-	a.Server.GET("/", a.introHandler)
+	a.server.GET("/", a.introHandler)
 
-	a.Server.GET("/login", a.getLoginHandler)
-	a.Server.POST("/login", a.postLoginHandler)
+	a.server.GET("/login", a.getLoginHandler)
+	a.server.POST("/login", a.postLoginHandler)
 }
 
 func (a *App) addPrivateRoutes() {
-	r := a.Server.Group("/admin")
+	r := a.server.Group("/admin")
 
 	config := echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(jwtCustomClaims)
 		},
-		SigningKey:  []byte(a.JWTSecret),
+		SigningKey:  []byte(a.jwtSecret),
 		TokenLookup: "cookie:token",
 	}
 
@@ -72,11 +72,11 @@ func (a *App) Start() {
 
 	s := http.Server{
 		Addr:        addr,
-		Handler:     a.Server,
+		Handler:     a.server,
 		ReadTimeout: 30 * time.Second,
 	}
 
-	fmt.Printf("Runway serving '%s' is running on port %s.\n", a.Name, addr)
+	fmt.Printf("Runway serving '%s' is running on port %s.\n", a.name, addr)
 	if err := s.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func (a *App) customHTTPErrorHandler(err error, c echo.Context) {
 				page.WithMessage("Page Not Found"),
 				page.WithDescription("The page you are looking for does not exist."),
 			)
-			Render(c, he.Code, page.Error(a.Name, nil, err))
+			Render(c, he.Code, page.Error(a.name, nil, err))
 			return
 		}
 		if he.Internal.Error() == "missing value in cookies" {
@@ -111,13 +111,13 @@ func (a *App) customHTTPErrorHandler(err error, c echo.Context) {
 	// log all unexpected errors
 	c.Logger().Error(err)
 
-	if err := Render(c, code, page.Error(a.Name, nil, page.NewHttpError(code))); err != nil {
+	if err := Render(c, code, page.Error(a.name, nil, page.NewHttpError(code))); err != nil {
 		c.Logger().Error(err)
 	}
 }
 
 func (a *App) introHandler(c echo.Context) error {
-	return Render(c, 200, page.Intro(a.Name, nil, time.Now().Year()))
+	return Render(c, 200, page.Intro(a.name, nil, time.Now().Year()))
 }
 
 func MustMeetSecretCriteria(secret string) {

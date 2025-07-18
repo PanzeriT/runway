@@ -22,14 +22,14 @@ func (a *App) getLoginHandler(c echo.Context) error {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
-			return []byte(a.JWTSecret), nil
+			return []byte(a.jwtSecret), nil
 		})
 		if err == nil && jwtToken.Valid {
 			return c.Redirect(http.StatusPermanentRedirect, "/admin")
 		}
 	}
 
-	return Render(c, http.StatusOK, page.Login(a.Name, nil))
+	return Render(c, http.StatusOK, page.Login(a.name, nil))
 }
 
 type jwtCustomClaims struct {
@@ -70,7 +70,7 @@ func (a *App) postLoginHandler(c echo.Context) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	t, err := token.SignedString([]byte(a.JWTSecret))
+	t, err := token.SignedString([]byte(a.jwtSecret))
 	if err != nil {
 		return err
 	}
@@ -97,5 +97,5 @@ func (a *App) logoutHandler(c echo.Context) error {
 		Expires: time.Now().Add(-time.Hour),
 	})
 
-	return Render(c, http.StatusOK, page.Logout(a.Name, nil))
+	return Render(c, http.StatusOK, page.Logout(a.name, nil))
 }

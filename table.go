@@ -11,5 +11,5 @@ import (
 func (a *App) tableHandler(c echo.Context) error {
 	uc := c.(*data.UserContext)
 
-	return Render(c, http.StatusOK, page.Table(a.Name, &uc.User))
+	return Render(c, http.StatusOK, page.Table(a.name, &uc.User))
 }

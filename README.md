@@ -53,7 +53,7 @@ func main() {
         app := runway.New("Runway Tester", "1234567890123456", db)
 
         // this would override the default homepage
-        // app.Server.GET("/", func(c echo.Context) error {
+        // app.GET("/", func(c runway.Context) error {
         //      return c.String(200, "Hello from Runway!")
         // })
 
@@ -75,10 +75,10 @@ Now just [open your browser](http://localhost:1323).
 I welcome contributions! Whether you want to fix bugs, improve documentation,
 or suggest new features, your input is valuable. If you have an idea for a
 new generator template, or want to help make the admin experience even more
-myrunwayapp, open an issue or submit a pull request.
+awesome, open an issue or submit a pull request.
 
 I believe that great admin tools are built by the community, for the community.
-Let's make something myrunwayapp together!
+Let's make something awesome together!
 
 ### How to Contribute
 
