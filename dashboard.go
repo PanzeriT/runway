@@ -9,5 +9,9 @@ import (
 func (a *App) dashboardHandler(c echo.Context) error {
 	uc := c.(*data.UserContext)
 
-	return Render(c, 200, page.Dashboard(a.name, &uc.User, 0))
+	for _, m := range a.service.GetModelNames() {
+		logger.Info("model", "name", m)
+	}
+
+	return Render(c, 200, page.Dashboard(a.name, &uc.User, 0, a.service.GetModelNames()))
 }

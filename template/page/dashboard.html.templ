@@ -4,10 +4,13 @@ import (
 	"github.com/panzerit/runway/data"
 	"github.com/panzerit/runway/template/html"
 	"github.com/panzerit/runway/template/layout"
-	"github.com/panzerit/runway/template/partial"
 )
 
-templ Dashboard(title string, user *data.User, userCount int) {
+func getModelLink(name string) string {
+	return "/admin/model/" + name
+}
+
+templ Dashboard(title string, user *data.User, userCount int, models []string) {
 	@layout.Base(title, user) {
 		@html.H1() {
 			{ user.Name }
@@ -18,11 +21,12 @@ templ Dashboard(title string, user *data.User, userCount int) {
 				<div class="text-3xl font-bold text-blue-600" x-text="value"></div>
 			</div>
 		</div>
-		@html.LinkButton(
-			"/admin/table",
-		) {
-			Users
+		for _, name := range models {
+			@html.LinkButton(
+				getModelLink(name),
+			) {
+				{ name }
+			}
 		}
-		@partial.Table()
 	}
 }

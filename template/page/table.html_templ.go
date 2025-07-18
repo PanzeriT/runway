@@ -12,10 +12,9 @@ import (
 	"github.com/panzerit/runway/data"
 	"github.com/panzerit/runway/template/html"
 	"github.com/panzerit/runway/template/layout"
-	"github.com/panzerit/runway/template/partial"
 )
 
-func Table(title string, user *data.User) templ.Component {
+func Table(title string, user *data.User, table string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -74,7 +73,7 @@ func Table(title string, user *data.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = partial.Table().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templ.Raw(table).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

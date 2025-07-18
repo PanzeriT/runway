@@ -4,14 +4,13 @@ import (
 	"github.com/panzerit/runway/data"
 	"github.com/panzerit/runway/template/html"
 	"github.com/panzerit/runway/template/layout"
-	"github.com/panzerit/runway/template/partial"
 )
 
-templ Table(title string, user *data.User) {
+templ Table(title string, user *data.User, table string) {
 	@layout.Base(title, user) {
 		@html.H1() {
 			Users
 		}
-		@partial.Table()
+		@templ.Raw(table)
 	}
 }

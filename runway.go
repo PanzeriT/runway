@@ -4,31 +4,50 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/panzerit/runway/asset"
+	"github.com/panzerit/runway/model"
+	"github.com/panzerit/runway/service"
 	"github.com/panzerit/runway/template/page"
 	"gorm.io/gorm"
 )
 
+type AppOption func(*App) *App
+
 type App struct {
 	name      string
 	jwtSecret string
-	db        *gorm.DB
+	service   service.Service
 	server    *echo.Echo
 }
 
+func init() {
+	logger = NewRunwayLogger()
+
+	registeredModels = make(map[string]reflect.Type)
+
+	MustRegisterModel(model.User{})
+	MustRegisterModel(model.Role{})
+}
+
 func New(name, jwtSecret string, db *gorm.DB) *App {
+	MustMeetSecretCriteria(jwtSecret)
+
+	db.Config.Logger = gormLogger{}
+
 	server := echo.New()
 
-	MustMeetSecretCriteria(jwtSecret)
+	svc := service.New(db, GetRegisteredModels)
 
 	app := &App{
 		name:      name,
 		jwtSecret: jwtSecret,
+		service:   svc,
 		server:    server,
 	}
 
@@ -64,7 +83,8 @@ func (a *App) addPrivateRoutes() {
 	r.GET("", a.dashboardHandler)
 	r.GET("/logout", a.logoutHandler)
 
-	r.GET("/table", a.tableHandler)
+	r.GET("/model/:model", a.tableHandler)
+	r.DELETE("/model/:model/:id", a.deleteRowHandler)
 }
 
 func (a *App) Start() {
