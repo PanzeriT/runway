@@ -7,12 +7,12 @@ import (
 )
 
 type User struct {
-	ID            uuid.UUID `gorm:"primaryKey;unique" runway:"hidden"`
-	Email         string    `gorm:"unique"`
-	FirstName     string
-	LastName      string
-	IsAdmin       bool
-	CreatedAt     time.Time `gorm:"autoCreateTime" runway:"hidden"`
-	UpdatedAt     time.Time `gorm:"autoUpdateTime" runway:"hidden"`
-	DeactivatedAt time.Time `runway:"hidden"`
+	ID            uuid.UUID `gorm:"primaryKey;unique" runway:"hidden" json:"id"`
+	Email         string    `gorm:"unique" runway:"create" json:"email"`
+	FirstName     string    `runway:"create" json:"first_name"`
+	LastName      string    `runway:"create" json:"last_name"`
+	IsAdmin       bool      `json:"is_admin"`
+	CreatedAt     time.Time `gorm:"autoCreateTime" runway:"hidden" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"autoUpdateTime" runway:"hidden" json:"updated_at"`
+	DeactivatedAt time.Time `runway:"hidden" json:"deactivated_at"`
 }

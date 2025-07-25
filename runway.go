@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"reflect"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -29,10 +28,17 @@ type App struct {
 func init() {
 	logger = NewRunwayLogger()
 
-	registeredModels = make(map[string]reflect.Type)
+	modles := []any{
+		model.User{},
+		model.Role{},
+	}
 
-	MustRegisterModel(model.User{})
-	MustRegisterModel(model.Role{})
+	for _, m := range modles {
+		err := model.Register(m)
+		if err != nil {
+			Terminate(NewAppError(ErrCannotRegisterModel, err))
+		}
+	}
 }
 
 func New(name, jwtSecret string, db *gorm.DB) *App {
@@ -42,7 +48,7 @@ func New(name, jwtSecret string, db *gorm.DB) *App {
 
 	server := echo.New()
 
-	svc := service.New(db, GetRegisteredModels)
+	svc := service.New(db, model.GetRegisteredModels)
 
 	app := &App{
 		name:      name,
@@ -84,6 +90,7 @@ func (a *App) addPrivateRoutes() {
 	r.GET("/logout", a.logoutHandler)
 
 	r.GET("/model/:model", a.tableHandler)
+	r.POST("/model/:model", a.createRowHandler)
 	r.DELETE("/model/:model/:id", a.deleteRowHandler)
 }
 

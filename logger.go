@@ -2,6 +2,7 @@ package runway
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -86,7 +87,7 @@ func detailsToSlog(details ...any) []slog.Attr {
 	list := make([]slog.Attr, 0, len(details))
 
 	for i, d := range details {
-		list = append(list, slog.Any("detail_"+string(i-1), d))
+		list = append(list, slog.Any(fmt.Sprintf("detail_%d", i-1), d))
 	}
 
 	return list

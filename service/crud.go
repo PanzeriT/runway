@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -17,18 +18,29 @@ func (s *service) GetModelNames() []string {
 	return ns
 }
 
-func (s *service) CreateRow(model string, dbObj any) error {
+func (s *service) CreateRow(dbObj any) error {
 	result := s.db.Create(dbObj)
 	return result.Error
 }
 
-func (s *service) FindRows(model string, limit, offset int) (any, error) {
-	for n := range s.GetModelNames() {
-		fmt.Println("Registered model:", n)
+func (s *service) CreateRowFromJSON(model string, jsonData []byte) error {
+	t, err := s.getTypeWithData(model)
+	if err != nil {
+		return err
 	}
+
+	err = json.Unmarshal(jsonData, t)
+	if err != nil {
+		return err
+	}
+
+	result := s.db.Create(t)
+	return result.Error
+}
+
+func (s *service) FindRows(model string, limit, offset int) (any, error) {
 	ts, err := s.getTypeSlice(model)
 	if err != nil {
-		fmt.Println("Error getting type slice:", err)
 		return nil, err
 	}
 
@@ -43,24 +55,28 @@ func (s *service) getType(model string) (any, error) {
 		return nil, fmt.Errorf("model %s not found", model)
 	}
 
-	obj := reflect.New(t).Interface()
+	obj := reflect.New(t.ModelType).Interface()
+	return obj, nil
+}
+
+func (s *service) getTypeWithData(model string) (any, error) {
+	obj, err := s.getType(model)
+	if err != nil {
+		return nil, err
+	}
+
+	reflect.ValueOf(obj).Elem().FieldByName("ID").Set(reflect.ValueOf(uuid.New()))
 	return obj, nil
 }
 
 func (s *service) getTypeSlice(model string) (any, error) {
-	for k, v := range s.models() {
-		fmt.Printf("registered models: %s: %v\n", k, v)
-	}
-	fmt.Println("getTypeSlice called for model:", model)
 	t, ok := s.models()[model]
 	if !ok {
 		return nil, fmt.Errorf("model %s not found", model)
 	}
 
-	st := reflect.SliceOf(t)
+	st := reflect.SliceOf(t.ModelType)
 	slice := reflect.MakeSlice(st, 0, 0)
-
-	fmt.Println("Creating slice of type:", reflect.TypeOf(slice).String())
 
 	return slice.Interface(), nil
 }

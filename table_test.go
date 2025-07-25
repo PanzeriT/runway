@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/panzerit/runway/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,7 +77,7 @@ func TestRenderTable_SliceOfUsers(t *testing.T) {
 		"</table>",
 	}
 
-	RegisterModel(User{})
+	model.Register(User{})
 	got, err := RenderTable(items, "user")
 
 	assert.Nil(t, err)
@@ -98,7 +99,7 @@ func TestRenderTable_SliceOfDummies(t *testing.T) {
 		"</table>",
 	}
 
-	RegisterModel(Dummy{})
+	model.Register(Dummy{})
 	got, err := RenderTable(items, "dummy")
 
 	assert.Nil(t, err)
@@ -122,7 +123,7 @@ func TestRenderTable_SliceOfUsersWithHiddenID(t *testing.T) {
 		"</table>",
 	}
 
-	RegisterModel(UserWithHiddenID{})
+	model.Register(UserWithHiddenID{})
 	got, err := RenderTable(items, "user_with_hidden_id")
 
 	assert.Nil(t, err)

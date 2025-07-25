@@ -16,7 +16,7 @@ func (a *App) CreateUser() uuid.UUID {
 		Email:     "thomas@panzeri.rocks",
 	}
 
-	err := a.service.CreateRow("user", &user)
+	err := a.service.CreateRow(&user)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 	}

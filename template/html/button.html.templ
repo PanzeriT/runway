@@ -1,12 +1,35 @@
 package html
 
-templ Button(value, typ, name string) {
+import "slices"
+
+type ButtonType string
+
+const (
+	SubmitButton ButtonType = "submit"
+	ResetButton  ButtonType = "reset"
+)
+
+func Button(bt ButtonType, value, name string) templ.Component {
+	if !slices.Contains([]ButtonType{SubmitButton, ResetButton}, bt) {
+		return div("invalid button type")
+	}
+
+	return button(bt, value, name)
+}
+
+templ button(bt ButtonType, value, name string) {
 	<button
-		type="{ typ }"
+		type="{ bt }"
 		name="{ name }"
 		value="{ value }"
-		class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-800 transition-colors"
+		class="inline-block px-6 py-2 m-2 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-800 transition-colors"
 	>
 		{ value }
 	</button>
+}
+
+templ div(text string) {
+	<div class="bg-red-600 text-white p-4 rounded-lg shadow-md">
+		{ text }
+	</div>
 }

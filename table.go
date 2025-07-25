@@ -1,6 +1,7 @@
 package runway
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +15,8 @@ import (
 	"github.com/labstack/echo/v4"
 	. "github.com/panzerit/htmlkit"
 	"github.com/panzerit/runway/data"
+	"github.com/panzerit/runway/model"
+	"github.com/panzerit/runway/template/html"
 	"github.com/panzerit/runway/template/page"
 )
 
@@ -26,7 +29,6 @@ var (
 
 func (a *App) tableHandler(c echo.Context) error {
 	uc := c.(*data.UserContext)
-
 	m := c.Param("model")
 
 	data, err := a.service.FindRows(m, 0, 0) // TODO: implement pagination
@@ -41,6 +43,32 @@ func (a *App) tableHandler(c echo.Context) error {
 	}
 
 	return Render(c, http.StatusOK, page.Table(a.name, &uc.User, string(t)))
+}
+
+func (a *App) createRowHandler(c echo.Context) error {
+	m := c.Param("model")
+	f, _ := c.FormParams()
+
+	j, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+
+	logger.Debug("creating row from JSON data", "model", m, "data", string(j))
+
+	user := &model.User{} // TODO: this should be dynamic based on the model name
+	err = json.Unmarshal(j, user)
+	fmt.Println("Unmarshalled user:", user)
+	fmt.Println("JSON data:", string(j))
+	fmt.Println("Error:", err)
+
+	err = a.service.CreateRowFromJSON(m, j)
+	if err != nil {
+		logger.Error("failed to create row", "model", m, "error", err)
+		return nil
+	}
+
+	return c.HTML(http.StatusCreated, "<tr><td> NEW </td></tr>")
 }
 
 func (a *App) deleteRowHandler(c echo.Context) error {
@@ -119,8 +147,19 @@ func RenderTable(data any, model string) ([]byte, error) {
 			tr.AddChild(Td(Text(template.HTMLEscapeString(fmt.Sprint(cell.Interface())))))
 		}
 
-		tr.AddChild(Td(Text("Test")))
-		tr.AddChild(Td(Raw(`EDIT --- <button class="text-red-500" hx-delete="` + model + `/` + row.FieldByName("ID").Interface().(uuid.UUID).String() + `" hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML">Delete</button>`)))
+		editButton := html.LinkButton("1/edit",
+			html.WithText("Edit"),
+		)
+		deleteButton := html.LinkButton("#",
+			html.WithText("Delete"),
+			html.WithClass("bg-red-600 hover:bg-gradient-to-r hover:from-red-600 hover:to-red-800"),
+			html.WithHxDelete(fmt.Sprintf("/admin/model/%s/%s/delete", model, row.FieldByName("ID").String())),
+			html.WithHxConfirm("Are you sure?"),
+			html.WithHxTarget("closest tr"),
+			html.WithHxSwap("outerHTML"),
+		)
+
+		tr.AddChild(Td(Component(editButton), Component(deleteButton)))
 		table.AddChild(tr)
 	}
 
