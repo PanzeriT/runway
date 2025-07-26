@@ -90,7 +90,7 @@ func (a *App) addPrivateRoutes() {
 	r.GET("/logout", a.logoutHandler)
 
 	r.GET("/model/:model", a.tableHandler)
-	r.POST("/model/:model", a.createRowHandler)
+	r.GET("/model/:model/:id/edit", a.showEditFormHandler)
 	r.DELETE("/model/:model/:id", a.deleteRowHandler)
 }
 
@@ -117,7 +117,7 @@ func (a *App) customHTTPErrorHandler(err error, c echo.Context) {
 	code := http.StatusInternalServerError
 
 	if he, ok := err.(*echo.HTTPError); ok {
-		// redirect to login page if the cookie is not valid
+		//	andle the case where the page cannot be found
 		if he.Code == 404 {
 			err := page.NewHttpError(
 				he.Code,
@@ -127,12 +127,17 @@ func (a *App) customHTTPErrorHandler(err error, c echo.Context) {
 			Render(c, he.Code, page.Error(a.name, nil, err))
 			return
 		}
+
+		// handle the case where the user is not authenticated
 		if he.Internal.Error() == "missing value in cookies" {
-			c.Redirect(http.StatusTemporaryRedirect, "/login")
-			fmt.Println("bad cookie")
+			// send 401 if it was an HTMX request
+			if c.Request().Header.Get("HX-Request") == "true" {
+				c.NoContent(http.StatusUnauthorized)
+			} else {
+				c.Redirect(http.StatusTemporaryRedirect, "/login")
+			}
+			return
 		}
-		code = he.Code
-		return
 	}
 
 	// log all unexpected errors

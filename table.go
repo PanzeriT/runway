@@ -42,7 +42,13 @@ func (a *App) tableHandler(c echo.Context) error {
 		echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("Error rendering table for model %s: %v", m, err))
 	}
 
-	return Render(c, http.StatusOK, page.Table(a.name, &uc.User, string(t)))
+	return Render(c, http.StatusOK, page.Table(a.name, m, &uc.User, string(t)))
+}
+
+func (a *App) showEditFormHandler(c echo.Context) error {
+	logger.Debug("showing edit form for model", "model", c.Param("model"))
+
+	return c.HTML(http.StatusCreated, "<tr><form><td> NEW </td><td> NEW </td><td> NEW </td><td> NEW </td></form></tr>")
 }
 
 func (a *App) createRowHandler(c echo.Context) error {
@@ -147,8 +153,11 @@ func RenderTable(data any, model string) ([]byte, error) {
 			tr.AddChild(Td(Text(template.HTMLEscapeString(fmt.Sprint(cell.Interface())))))
 		}
 
-		editButton := html.LinkButton("1/edit",
+		editButton := html.LinkButton("#",
 			html.WithText("Edit"),
+			html.WithHxGet(fmt.Sprintf("/admin/model/%s/%s/edit", model, row.FieldByName("ID").String())),
+			html.WithHxTarget("closest tr"),
+			html.WithHxSwap("outerHTML"),
 		)
 		deleteButton := html.LinkButton("#",
 			html.WithText("Delete"),

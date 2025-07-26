@@ -18,7 +18,7 @@ templ Login(title string, user *data.User) {
 					<label class="block text-sm font-medium">Password</label>
 					<input name="password" type="password" class="mt-1 block w-full border rounded px-3 py-2"/>
 				</div>
-				@html.Button("Login", "submit", "Login")
+				@html.Button(html.SubmitButton, "Login", "login")
 			</form>
 		</div>
 	}

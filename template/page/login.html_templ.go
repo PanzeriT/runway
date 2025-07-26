@@ -51,7 +51,7 @@ func Login(title string, user *data.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = html.Button("Login", "submit", "Login").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = html.Button(html.SubmitButton, "Login", "login").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

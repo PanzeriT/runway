@@ -6,10 +6,10 @@ import (
 	"github.com/panzerit/runway/template/layout"
 )
 
-templ Table(title string, user *data.User, table string) {
+templ Table(title, model string, user *data.User, table string) {
 	@layout.Base(title, user) {
 		@html.H1() {
-			Users
+			{ model }
 		}
 		@templ.Raw(table)
 	}

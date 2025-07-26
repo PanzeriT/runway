@@ -3,6 +3,7 @@ version: '3'
 tasks:
   clean:
     cmds:
+      - task: minify
       - task: template:regenerate
       - task: format
       - go mod tidy
@@ -12,6 +13,11 @@ tasks:
     cmds:
       - go fmt ./...
       - templ fmt .
+
+  minify:
+    cmds:
+      - esbuild ./asset/js/runway.js --minify --outfile=./asset/js/runway.min.js
+    silent: true
 
   template:
     cmds:
