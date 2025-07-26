@@ -6,11 +6,16 @@ import (
 	"github.com/panzerit/runway/template/layout"
 )
 
-templ Table(title, model string, user *data.User, table string) {
+templ Table(title, model string, user *data.User, table string, paginationLinks []templ.Component) {
 	@layout.Base(title, user) {
 		@html.H1() {
 			{ model }
 		}
 		@templ.Raw(table)
+		for _, link := range paginationLinks {
+			@templ.Component(link) {
+				Hello
+			}
+		}
 	}
 }

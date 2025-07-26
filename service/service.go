@@ -12,7 +12,8 @@ type Service interface {
 
 	CreateRow(dbObj any) error
 	CreateRowFromJSON(model string, jsonData []byte) error
-	FindRows(model string, limit, offset int) (any, error)
+	FindRows(model string, limit, page int) (any, error)
+	FindRowCount(model string) (int64, error)
 	DeleteRow(model string, id uuid.UUID) error
 }
 

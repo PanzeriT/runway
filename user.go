@@ -7,13 +7,13 @@ import (
 	"github.com/panzerit/runway/model"
 )
 
-func (a *App) CreateUser() uuid.UUID {
+func (a *App) CreateUser(firstName, lastName, email string) uuid.UUID {
 	// TODO: Remove since this is just for testing purposes
 	user := model.User{
 		ID:        uuid.New(),
-		FirstName: "Thomas",
-		LastName:  "Panzeri",
-		Email:     "thomas@panzeri.rocks",
+		FirstName: firstName,
+		LastName:  lastName,
+		Email:     email,
 	}
 
 	err := a.service.CreateRow(&user)

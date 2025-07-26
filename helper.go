@@ -5,6 +5,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// TODO: remove this and use the Render function in ./handler/handler.go
+
 func Render(ctx echo.Context, statusCode int, t templ.Component) error {
 	buf := templ.GetBuffer()
 	defer templ.ReleaseBuffer(buf)

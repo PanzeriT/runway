@@ -38,15 +38,27 @@ func (s *service) CreateRowFromJSON(model string, jsonData []byte) error {
 	return result.Error
 }
 
-func (s *service) FindRows(model string, limit, offset int) (any, error) {
+func (s *service) FindRows(model string, limit, page int) (any, error) {
 	ts, err := s.getTypeSlice(model)
 	if err != nil {
 		return nil, err
 	}
 
-	result := s.db.Find(&ts)
+	result := s.db.Limit(limit).Offset(limit * (page - 1)).Find(&ts)
 
 	return ts, result.Error
+}
+
+func (s *service) FindRowCount(model string) (int64, error) {
+	ts, err := s.getTypeSlice(model)
+	if err != nil {
+		return 0, err
+	}
+
+	var count int64
+	result := s.db.Model(&ts).Count(&count)
+
+	return count, result.Error
 }
 
 func (s *service) getType(model string) (any, error) {

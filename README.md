@@ -70,6 +70,13 @@ go run main.go
 
 Now just [open your browser](http://localhost:1323).
 
+## Naming Conventions
+
+### Route Handlers
+
+The first word of the handler is the method, followed by the purpose or a
+specific resource name.
+
 ## Contribution
 
 I welcome contributions! Whether you want to fix bugs, improve documentation,

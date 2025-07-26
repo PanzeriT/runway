@@ -99,7 +99,7 @@ templ link(href string, args *linkOptionalArgs) {
 		if args.asButton {
 			class={ composeClass("inline-block px-4 py-2 m-2 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-800 transition-colors", args.class) }
 		} else {
-			class={ composeClass("text-blue-600 hover:underline text-lg font-medium", args.class) }
+			class={ composeClass("px-4, py-2 m-2 text-blue-600 hover:underline text-lg font-medium", args.class) }
 		}
 		if args.target != "" {
 			target={ args.target }

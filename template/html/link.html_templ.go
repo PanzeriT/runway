@@ -127,7 +127,7 @@ func link(href string, args *linkOptionalArgs) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var3 = []any{composeClass("text-blue-600 hover:underline text-lg font-medium", args.class)}
+		var templ_7745c5c3_Var3 = []any{composeClass("px-4, py-2 m-2 text-blue-600 hover:underline text-lg font-medium", args.class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

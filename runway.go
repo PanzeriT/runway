@@ -10,6 +10,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/panzerit/runway/asset"
+	"github.com/panzerit/runway/handler"
 	"github.com/panzerit/runway/model"
 	"github.com/panzerit/runway/service"
 	"github.com/panzerit/runway/template/page"
@@ -89,9 +90,7 @@ func (a *App) addPrivateRoutes() {
 	r.GET("", a.dashboardHandler)
 	r.GET("/logout", a.logoutHandler)
 
-	r.GET("/model/:model", a.tableHandler)
-	r.GET("/model/:model/:id/edit", a.showEditFormHandler)
-	r.DELETE("/model/:model/:id", a.deleteRowHandler)
+	handler.NewTableHandler(a.service, logger.Logger, a.name).Register(r)
 }
 
 func (a *App) Start() {
