@@ -1,9 +1,12 @@
 package runway
 
 import (
+	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -22,6 +25,7 @@ type AppOption func(*App) *App
 type App struct {
 	name      string
 	jwtSecret string
+	port      string
 	service   service.Service
 	server    *echo.Echo
 }
@@ -66,6 +70,11 @@ func New(name, jwtSecret string, db *gorm.DB) *App {
 	return app
 }
 
+func (a *App) SetPort(port int) *App {
+	a.port = fmt.Sprintf(":%d", port)
+	return a
+}
+
 func (a *App) addPublicRoutes() {
 	a.server.GET("/", a.introHandler)
 
@@ -94,18 +103,28 @@ func (a *App) addPrivateRoutes() {
 }
 
 func (a *App) Start() {
-	addr := ":1291"
-
 	s := http.Server{
-		Addr:        addr,
+		Addr:        a.port,
 		Handler:     a.server,
 		ReadTimeout: 30 * time.Second,
 	}
 
-	fmt.Printf("Runway serving '%s' is running on port %s.\n", a.name, addr)
-	if err := s.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatal(err)
+	// run graceful shutdown in a separate goroutine
+	done := make(chan bool, 1)
+
+	// start server
+	go gracefulShutdown(a.server.Server, done)
+
+	fmt.Printf("Runway serving '%s' is running on port %s.\n", a.name, a.port)
+	err := s.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		Exit(ServerError, err)
 	}
+
+	// wait for the graceful shutdown to complete
+	<-done
+
+	Exit(0, nil)
 }
 
 func (a *App) customHTTPErrorHandler(err error, c echo.Context) {
@@ -155,4 +174,25 @@ func MustMeetSecretCriteria(secret string) {
 	if len(secret) < 16 {
 		Terminate(ErrSecretToShort)
 	}
+}
+
+func gracefulShutdown(s *http.Server, done chan bool) {
+	// create context that listens for the interrupt signal from the OS
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// listen for the interrupt signal.
+	<-ctx.Done()
+
+	slog.Info("shutting down gracefully, press Ctrl+C again to force")
+	stop() // allow Ctrl+C to force shutdown
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := s.Shutdown(ctx); err != nil {
+		slog.Error("server shutdown error", "error", err)
+	}
+
+	// notify the main goroutine that the shutdown is complete
+	done <- true
 }
