@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (a *App) getLoginHandler(c echo.Context) error {
+func (a *Runway) getLoginHandler(c echo.Context) error {
 	// if there is a token cookie, check if it's valid
 	// and if so, redirect to dashboard
 	tokenCookie, err := c.Cookie("token")
@@ -47,7 +47,7 @@ type postLoginHandlerResponse struct {
 	Token string `json:"token"`
 }
 
-func (a *App) postLoginHandler(c echo.Context) error {
+func (a *Runway) postLoginHandler(c echo.Context) error {
 	var req postLoginHandlerRequest
 	if err := c.Bind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -88,7 +88,7 @@ func (a *App) postLoginHandler(c echo.Context) error {
 	return c.Redirect(http.StatusMovedPermanently, "/admin")
 }
 
-func (a *App) logoutHandler(c echo.Context) error {
+func (a *Runway) logoutHandler(c echo.Context) error {
 	// clear the token cookie
 	c.SetCookie(&http.Cookie{
 		Name:    "token",

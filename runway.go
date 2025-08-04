@@ -20,9 +20,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type AppOption func(*App) *App
+type AppOption func(*Runway) *Runway
 
-type App struct {
+type Runway struct {
 	name      string
 	jwtSecret string
 	port      string
@@ -46,7 +46,7 @@ func init() {
 	}
 }
 
-func New(name, jwtSecret string, db *gorm.DB) *App {
+func New(name, jwtSecret string, db *gorm.DB) *Runway {
 	MustMeetSecretCriteria(jwtSecret)
 
 	db.Config.Logger = gormLogger{}
@@ -55,7 +55,7 @@ func New(name, jwtSecret string, db *gorm.DB) *App {
 
 	svc := service.New(db, model.GetRegisteredModels)
 
-	app := &App{
+	app := &Runway{
 		name:      name,
 		jwtSecret: jwtSecret,
 		service:   svc,
@@ -70,19 +70,19 @@ func New(name, jwtSecret string, db *gorm.DB) *App {
 	return app
 }
 
-func (a *App) SetPort(port int) *App {
+func (a *Runway) SetPort(port int) *Runway {
 	a.port = fmt.Sprintf(":%d", port)
 	return a
 }
 
-func (a *App) addPublicRoutes() {
+func (a *Runway) addPublicRoutes() {
 	a.server.GET("/", a.introHandler)
 
 	a.server.GET("/login", a.getLoginHandler)
 	a.server.POST("/login", a.postLoginHandler)
 }
 
-func (a *App) addPrivateRoutes() {
+func (a *Runway) addPrivateRoutes() {
 	r := a.server.Group("/admin")
 
 	config := echojwt.Config{
@@ -102,7 +102,7 @@ func (a *App) addPrivateRoutes() {
 	handler.NewTableHandler(a.service, logger.Logger, a.name).Register(r)
 }
 
-func (a *App) Start() {
+func (a *Runway) Start() {
 	s := http.Server{
 		Addr:        a.port,
 		Handler:     a.server,
@@ -127,7 +127,7 @@ func (a *App) Start() {
 	Exit(0, nil)
 }
 
-func (a *App) customHTTPErrorHandler(err error, c echo.Context) {
+func (a *Runway) customHTTPErrorHandler(err error, c echo.Context) {
 	if c.Response().Committed {
 		return
 	}
@@ -166,7 +166,7 @@ func (a *App) customHTTPErrorHandler(err error, c echo.Context) {
 	}
 }
 
-func (a *App) introHandler(c echo.Context) error {
+func (a *Runway) introHandler(c echo.Context) error {
 	return Render(c, 200, page.Intro(a.name, nil, time.Now().Year()))
 }
 

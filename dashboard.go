@@ -6,7 +6,7 @@ import (
 	"github.com/panzerit/runway/template/page"
 )
 
-func (a *App) dashboardHandler(c echo.Context) error {
+func (a *Runway) dashboardHandler(c echo.Context) error {
 	uc := c.(*data.UserContext)
 
 	for _, m := range a.service.GetModelNames() {

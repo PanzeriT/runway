@@ -7,7 +7,7 @@ import (
 	"github.com/panzerit/runway/model"
 )
 
-func (a *App) CreateUser(firstName, lastName, email string) uuid.UUID {
+func (a *Runway) CreateUser(firstName, lastName, email string) uuid.UUID {
 	// TODO: Remove since this is just for testing purposes
 	user := model.User{
 		ID:        uuid.New(),
@@ -24,7 +24,7 @@ func (a *App) CreateUser(firstName, lastName, email string) uuid.UUID {
 	return user.ID
 }
 
-func (a *App) DeleteUser(id uuid.UUID) {
+func (a *Runway) DeleteUser(id uuid.UUID) {
 	// TODO: Remove since this is just for testing purposes
 
 	err := a.service.DeleteRow("user", id)
