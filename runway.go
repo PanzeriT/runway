@@ -13,7 +13,6 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/panzerit/runway/asset"
-	"github.com/panzerit/runway/handler"
 	"github.com/panzerit/runway/model"
 	"github.com/panzerit/runway/service"
 	"github.com/panzerit/runway/template/page"
@@ -23,11 +22,12 @@ import (
 type AppOption func(*Runway) *Runway
 
 type Runway struct {
-	name      string
-	jwtSecret string
-	port      string
-	service   service.Service
-	server    *echo.Echo
+	name          string
+	jwtSecret     string
+	port          string
+	setupComplete bool
+	service       service.Service
+	server        *echo.Echo
 }
 
 func init() {
@@ -56,10 +56,12 @@ func New(name, jwtSecret string, db *gorm.DB) *Runway {
 	svc := service.New(db, model.GetRegisteredModels)
 
 	app := &Runway{
-		name:      name,
-		jwtSecret: jwtSecret,
-		service:   svc,
-		server:    server,
+		name:          name,
+		port:          ":1291",
+		jwtSecret:     jwtSecret,
+		setupComplete: checkSetup(svc),
+		service:       svc,
+		server:        server,
 	}
 
 	app.server.HTTPErrorHandler = app.customHTTPErrorHandler
@@ -71,8 +73,16 @@ func New(name, jwtSecret string, db *gorm.DB) *Runway {
 }
 
 func (a *Runway) SetPort(port int) *Runway {
+	if port < 1000 || port > 9999 {
+		slog.Error("port must be between 1000 and 9999", "port", port)
+		return a
+	}
 	a.port = fmt.Sprintf(":%d", port)
 	return a
+}
+
+func (r *Runway) Renderer(renderer echo.Renderer) {
+	r.server.Renderer = renderer
 }
 
 func (a *Runway) addPublicRoutes() {
@@ -80,6 +90,8 @@ func (a *Runway) addPublicRoutes() {
 
 	a.server.GET("/login", a.getLoginHandler)
 	a.server.POST("/login", a.postLoginHandler)
+
+	a.server.GET("/setup", a.getSetup)
 }
 
 func (a *Runway) addPrivateRoutes() {
@@ -99,7 +111,7 @@ func (a *Runway) addPrivateRoutes() {
 	r.GET("", a.dashboardHandler)
 	r.GET("/logout", a.logoutHandler)
 
-	handler.NewTableHandler(a.service, logger.Logger, a.name).Register(r)
+	// handler.NewTableHandler(a.service, logger.Logger, a.name).Register(r)
 }
 
 func (a *Runway) Start() {
@@ -174,6 +186,10 @@ func MustMeetSecretCriteria(secret string) {
 	if len(secret) < 16 {
 		Terminate(ErrSecretToShort)
 	}
+}
+
+func checkSetup(svc service.Service) bool {
+	return false
 }
 
 func gracefulShutdown(s *http.Server, done chan bool) {

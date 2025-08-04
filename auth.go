@@ -12,13 +12,15 @@ import (
 )
 
 func (a *Runway) getLoginHandler(c echo.Context) error {
-	// if there is a token cookie, check if it's valid
-	// and if so, redirect to dashboard
+	// check if the setup is complete
+	if a.setupComplete == false {
+		c.Redirect(http.StatusTemporaryRedirect, "/setup")
+	}
+
+	// show the dashboard, if there is a valid JWT token in the cookie
 	tokenCookie, err := c.Cookie("token")
 	if err == nil && tokenCookie != nil && tokenCookie.Value != "" {
-		// Validate JWT token
 		jwtToken, err := jwt.Parse(tokenCookie.Value, func(token *jwt.Token) (interface{}, error) {
-			// Ensure the signing method is what you expect
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
 			}
@@ -29,6 +31,7 @@ func (a *Runway) getLoginHandler(c echo.Context) error {
 		}
 	}
 
+	// in all other cases, show the login page
 	return Render(c, http.StatusOK, page.Login(a.name, nil))
 }
 
