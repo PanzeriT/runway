@@ -11,6 +11,11 @@ import (
 	"text/tabwriter"
 )
 
+type (
+	NoInputHandler func(ctx context.Context) (Responder, error)
+	Handler        func(ctx context.Context, req CreateUserRequest) (Responder, error)
+)
+
 type handlerWrapper struct {
 	handlerValue reflect.Value
 	inputType    reflect.Type
@@ -56,14 +61,19 @@ func NewRouter() *Router {
 	}
 }
 
+// Register GET route
+func (r *Router) GET(path string, handler any) {
+	r.registerRoute("GET", path, handler)
+}
+
 // Register POST route
 func (r *Router) POST(path string, handler any) {
 	r.registerRoute("POST", path, handler)
 }
 
-// Register GET route
-func (r *Router) GET(path string, handler any) {
-	r.registerRoute("GET", path, handler)
+// Register DELETE route
+func (r *Router) DELETE(path string, handler any) {
+	r.registerRoute("DELETE", path, handler)
 }
 
 func (r *Router) registerRoute(method, path string, handler any) {

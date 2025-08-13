@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 )
@@ -39,8 +38,9 @@ func main() {
 
 	router.GET("/", HomeHandler)
 	router.POST("/users", UserHandler)
+	router.DELETE("/users", UserHandler)
 	router.GET("/health", HealthHandler)
-	// router.GET("/openapi.json", &OpenAPIService{router: router})
+	router.GET("/openapi.json", OpenAPIHandler(router))
 
 	router.PrintRoutes()
 
@@ -49,17 +49,13 @@ func main() {
 	}
 }
 
-// OpenAPI service
-type OpenAPIRequest struct{}
+func OpenAPIHandler(r *Router) Handler {
+	return func(ctx context.Context, req CreateUserRequest) (Responder, error) {
+		spec, err := r.GenerateOpenAPIJSON()
+		if err != nil {
+			return nil, err
+		}
 
-type OpenAPIService struct {
-	router *Router
-}
-
-func (s *OpenAPIService) Handle(ctx context.Context, req OpenAPIRequest) (json.RawMessage, error) {
-	spec, err := s.router.GenerateOpenAPIJSON()
-	if err != nil {
-		return nil, err
+		return JSONResponse(http.StatusOK, spec), nil
 	}
-	return json.RawMessage(spec), nil
 }

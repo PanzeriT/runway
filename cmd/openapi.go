@@ -1,14 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 )
 
 // Generate OpenAPI spec (bonus feature)
-func (r *Router) GenerateOpenAPIJSON() ([]byte, error) {
+func (r *Router) GenerateOpenAPIJSON() (any, error) {
 	spec := map[string]any{
 		"openapi": "3.0.0",
 		"info": map[string]any{
@@ -41,7 +40,7 @@ func (r *Router) GenerateOpenAPIJSON() ([]byte, error) {
 		}
 	}
 
-	return json.MarshalIndent(spec, "", "  ")
+	return spec, nil
 }
 
 func (r *Router) typeToSchema(t reflect.Type) map[string]any {
