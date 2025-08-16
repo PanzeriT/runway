@@ -9,14 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	_ "github.com/panzerit/runway/apps/user"
-	"github.com/panzerit/runway/asset"
-	"github.com/panzerit/runway/handler"
 	"github.com/panzerit/runway/model"
 	"github.com/panzerit/runway/registry"
+	"github.com/panzerit/runway/router"
 	"github.com/panzerit/runway/service"
 	"github.com/panzerit/runway/template/page"
 	"gorm.io/gorm"
@@ -29,7 +26,7 @@ type Runway struct {
 	jwtSecret string
 	port      string
 	service   service.Service
-	server    *echo.Echo
+	router    *router.Router
 }
 
 func init() {
@@ -48,28 +45,49 @@ func init() {
 	}
 }
 
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	html := `
+    <!DOCTYPE html>
+    <html>
+        <head><title>Home Page</title></head>
+        <body>
+            <h1>Welcome to the Home Page</h1>
+            <p>Using our custom router!</p>
+            <p><a href="/user">Go to User Page</a></p>
+        </body>
+    </html>`
+
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprint(w, html)
+}
+
 func New(name, jwtSecret string, db *gorm.DB) *Runway {
 	MustMeetSecretCriteria(jwtSecret)
 
 	db.Config.Logger = gormLogger{}
 
-	server := echo.New()
-
 	svc := service.New(db, model.GetRegisteredModels)
+
+	router := router.New()
+
+	router.GET("/", indexHandler)
+	router.GET("/user", indexHandler) // Example user handler, replace with actual user handler\
 
 	app := &Runway{
 		name:      name,
 		jwtSecret: jwtSecret,
 		service:   svc,
-		server:    server,
+		router:    router,
 	}
 
-	app.server.HTTPErrorHandler = app.customHTTPErrorHandler
-	app.server.StaticFS("/", echo.MustSubFS(asset.FS, "./"))
-	app.addPublicRoutes()
-	app.addPrivateRoutes()
+	// app.server.HTTPErrorHandler = app.customHTTPErrorHandler
+	// app.server.StaticFS("/", echo.MustSubFS(asset.FS, "./"))
+	// app.addPublicRoutes()
+	// app.addPrivateRoutes()
 
-	registry.GetRegistry().InitializeAll(context.Background())
+	r := registry.GetRegistry()
+
+	r.InitializeAll(context.Background(), app.router)
 
 	return app
 }
@@ -80,36 +98,35 @@ func (a *Runway) SetPort(port int) *Runway {
 }
 
 func (a *Runway) addPublicRoutes() {
-	a.server.GET("/", a.introHandler)
-
-	a.server.GET("/login", a.getLoginHandler)
-	a.server.POST("/login", a.postLoginHandler)
+	// a.server.GET("/", a.introHandler)
+	// a.server.GET("/login", a.getLoginHandler)
+	// a.server.POST("/login", a.postLoginHandler)
 }
 
 func (a *Runway) addPrivateRoutes() {
-	r := a.server.Group("/admin")
-
-	config := echojwt.Config{
-		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return new(jwtCustomClaims)
-		},
-		SigningKey:  []byte(a.jwtSecret),
-		TokenLookup: "cookie:token",
-	}
-
-	r.Use(echojwt.WithConfig(config))
-	r.Use(JWTExtractor)
-
-	r.GET("", a.dashboardHandler)
-	r.GET("/logout", a.logoutHandler)
-
-	handler.NewTableHandler(a.service, logger.Logger, a.name).Register(r)
+	// r := a.server.Group("/admin")
+	//
+	// config := echojwt.Config{
+	// 	NewClaimsFunc: func(c echo.Context) jwt.Claims {
+	// 		return new(jwtCustomClaims)
+	// 	},
+	// 	SigningKey:  []byte(a.jwtSecret),
+	// 	TokenLookup: "cookie:token",
+	// }
+	//
+	// r.Use(echojwt.WithConfig(config))
+	// r.Use(JWTExtractor)
+	//
+	// r.GET("", a.dashboardHandler)
+	// r.GET("/logout", a.logoutHandler)
+	//
+	// handler.NewTableHandler(a.service, logger.Logger, a.name).Register(r)
 }
 
 func (a *Runway) Start() {
 	s := http.Server{
 		Addr:        a.port,
-		Handler:     a.server,
+		Handler:     a.router,
 		ReadTimeout: 30 * time.Second,
 	}
 
@@ -117,7 +134,7 @@ func (a *Runway) Start() {
 	done := make(chan bool, 1)
 
 	// start server
-	go gracefulShutdown(a.server.Server, done)
+	// go gracefulShutdown(a.Server.router, done)
 
 	fmt.Printf("Runway serving '%s' is running on port %s.\n", a.name, a.port)
 	err := s.ListenAndServe()
@@ -168,10 +185,6 @@ func (a *Runway) customHTTPErrorHandler(err error, c echo.Context) {
 	if err := Render(c, code, page.Error(a.name, nil, page.NewHttpError(code))); err != nil {
 		c.Logger().Error(err)
 	}
-}
-
-func (a *Runway) introHandler(c echo.Context) error {
-	return Render(c, 200, page.Intro(a.name, nil, time.Now().Year()))
 }
 
 func MustMeetSecretCriteria(secret string) {

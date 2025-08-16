@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"sync"
+
+	"github.com/panzerit/runway/router"
 )
 
 // App defines the interface that all applications must implement
 type App interface {
 	Name() string
-	Routes() map[string]http.HandlerFunc
+	Routes() map[string]router.HandlerFunc
 	Initialize(ctx context.Context) error
+	LoadTemplates() error
 	Shutdown(ctx context.Context) error
 	HealthCheck() error
 }
@@ -21,7 +23,7 @@ type App interface {
 type Registry struct {
 	mu       sync.RWMutex
 	apps     map[string]App
-	handlers map[string]http.HandlerFunc
+	handlers map[string]router.HandlerFunc
 }
 
 // Global registry instance
@@ -35,7 +37,7 @@ func GetRegistry() *Registry {
 	registryOnce.Do(func() {
 		globalRegistry = &Registry{
 			apps:     make(map[string]App),
-			handlers: make(map[string]http.HandlerFunc),
+			handlers: make(map[string]router.HandlerFunc),
 		}
 	})
 	return globalRegistry
@@ -57,7 +59,7 @@ func (r *Registry) Register(app App) error {
 }
 
 // Initialize all registered apps
-func (r *Registry) InitializeAll(ctx context.Context) error {
+func (r *Registry) InitializeAll(ctx context.Context, router *router.Router) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -66,11 +68,16 @@ func (r *Registry) InitializeAll(ctx context.Context) error {
 			return fmt.Errorf("failed to initialize app %s: %w", name, err)
 		}
 
+		if err := app.LoadTemplates(); err != nil {
+			return fmt.Errorf("failed to load templates for app %s: %w", name, err)
+		}
+
 		// Register routes
 		routes := app.Routes()
 		for pattern, handler := range routes {
 			fullPattern := fmt.Sprintf("/%s%s", name, pattern)
 			r.handlers[fullPattern] = handler
+			router.GET(fullPattern, handler)
 			log.Printf("Registered route: %s", fullPattern)
 		}
 	}
@@ -79,7 +86,7 @@ func (r *Registry) InitializeAll(ctx context.Context) error {
 }
 
 // GetHandler returns the handler for a given pattern
-func (r *Registry) GetHandler(pattern string) (http.HandlerFunc, bool) {
+func (r *Registry) GetHandler(pattern string) (router.HandlerFunc, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
