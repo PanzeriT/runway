@@ -1,35 +1,33 @@
+// database.go
 package database
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 )
 
 type Driver interface {
-	Connect(config []string) (*gorm.DB, error)
+	Connect(config Config) (*gorm.DB, error)
 }
 
-type (
-	Config    []string
-	ConfigKey string
-)
-
-var driver Driver
-
-func Register(d Driver) {
-	if driver != nil {
-		panic("driver already registered")
-	}
-	driver = d
+type Config interface {
+	Type() string
 }
 
-func Init(config ...string) (*gorm.DB, error) {
-	if driver == nil {
-		panic("no driver registered")
-	}
+var drivers = make(map[string]Driver)
 
-	if len(config)%2 != 0 {
-		panic("config needs to be must be key-value pairs")
+func Register(driverType string, driver Driver) {
+	if _, exists := drivers[driverType]; exists {
+		panic(fmt.Sprintf("driver %s already registered", driverType))
 	}
+	drivers[driverType] = driver
+}
 
+func Init(config Config) (*gorm.DB, error) {
+	driver, exists := drivers[config.Type()]
+	if !exists {
+		return nil, fmt.Errorf("no driver registered for type: %s", config.Type())
+	}
 	return driver.Connect(config)
 }

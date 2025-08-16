@@ -24,7 +24,7 @@ type service struct {
 
 func New(db *gorm.DB, models func() map[string]model.Model) Service {
 	// TODO: this needs to be dynamic as well
-	db.AutoMigrate(&model.User{}, &model.Role{})
+	// db.AutoMigrate(&model.User{}, &model.Role{})
 
 	return &service{
 		db:     db,

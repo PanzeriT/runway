@@ -12,6 +12,10 @@ func (r *Runway) GET(path string, fn func(c Context) error) {
 	r.server.GET(path, fn)
 }
 
+func (r *Runway) POST(path string, fn func(c Context) error) {
+	r.server.POST(path, fn)
+}
+
 func (r *Runway) Group(path string) *echo.Group {
 	return r.server.Group(path)
 }

@@ -12,6 +12,10 @@ type Handler interface {
 	Register(e *echo.Group)
 }
 
+func Render(ctx echo.Context, statusCode int, t templ.Component) error {
+	return render(ctx, statusCode, t)
+}
+
 func render(ctx echo.Context, statusCode int, t templ.Component) error {
 	buf := templ.GetBuffer()
 	defer templ.ReleaseBuffer(buf)

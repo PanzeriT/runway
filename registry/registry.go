@@ -1,0 +1,129 @@
+package registry
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"sync"
+)
+
+// App defines the interface that all sub-applications must implement
+type App interface {
+	Name() string
+	Routes() map[string]http.HandlerFunc
+	Initialize(ctx context.Context) error
+	Shutdown(ctx context.Context) error
+	HealthCheck() error
+}
+
+// Registry manages all registered sub-applications
+type Registry struct {
+	mu       sync.RWMutex
+	apps     map[string]App
+	handlers map[string]http.HandlerFunc
+}
+
+// Global registry instance
+var (
+	globalRegistry *Registry
+	registryOnce   sync.Once
+)
+
+// GetRegistry returns the singleton registry instance
+func GetRegistry() *Registry {
+	registryOnce.Do(func() {
+		globalRegistry = &Registry{
+			apps:     make(map[string]App),
+			handlers: make(map[string]http.HandlerFunc),
+		}
+	})
+	return globalRegistry
+}
+
+// Register adds a sub-app to the registry (called during init)
+func (r *Registry) Register(app App) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	name := app.Name()
+	if _, exists := r.apps[name]; exists {
+		return fmt.Errorf("sub-app %s already registered", name)
+	}
+
+	r.apps[name] = app
+	log.Printf("Registered sub-app: %s", name)
+	return nil
+}
+
+// Initialize all registered sub-apps
+func (r *Registry) InitializeAll(ctx context.Context) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for name, app := range r.apps {
+		if err := app.Initialize(ctx); err != nil {
+			return fmt.Errorf("failed to initialize sub-app %s: %w", name, err)
+		}
+
+		// Register routes
+		routes := app.Routes()
+		for pattern, handler := range routes {
+			fullPattern := fmt.Sprintf("/%s%s", name, pattern)
+			r.handlers[fullPattern] = handler
+			log.Printf("Registered route: %s", fullPattern)
+		}
+	}
+
+	return nil
+}
+
+// GetHandler returns the handler for a given pattern
+func (r *Registry) GetHandler(pattern string) (http.HandlerFunc, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	handler, exists := r.handlers[pattern]
+	return handler, exists
+}
+
+// ListApps returns all registered sub-app names
+func (r *Registry) ListApps() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	names := make([]string, 0, len(r.apps))
+	for name := range r.apps {
+		names = append(names, name)
+	}
+	return names
+}
+
+// GetApp returns a sub-app by name (for health checks, etc.)
+func (r *Registry) GetApp(name string) (App, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	app, exists := r.apps[name]
+	return app, exists
+}
+
+// Shutdown gracefully shuts down all sub-apps
+func (r *Registry) Shutdown(ctx context.Context) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	var lastErr error
+	for name, app := range r.apps {
+		if err := app.Shutdown(ctx); err != nil {
+			log.Printf("Error shutting down sub-app %s: %v", name, err)
+			lastErr = err
+		}
+	}
+	return lastErr
+}
+
+// Convenience function for global registration
+func Register(app App) error {
+	return GetRegistry().Register(app)
+}
