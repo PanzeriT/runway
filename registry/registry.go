@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-// App defines the interface that all sub-applications must implement
+// App defines the interface that all applications must implement
 type App interface {
 	Name() string
 	Routes() map[string]http.HandlerFunc
@@ -17,7 +17,7 @@ type App interface {
 	HealthCheck() error
 }
 
-// Registry manages all registered sub-applications
+// Registry manages all registered applications
 type Registry struct {
 	mu       sync.RWMutex
 	apps     map[string]App
@@ -41,29 +41,29 @@ func GetRegistry() *Registry {
 	return globalRegistry
 }
 
-// Register adds a sub-app to the registry (called during init)
+// Register adds a app to the registry (called during init)
 func (r *Registry) Register(app App) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	name := app.Name()
 	if _, exists := r.apps[name]; exists {
-		return fmt.Errorf("sub-app %s already registered", name)
+		return fmt.Errorf("app %s already registered", name)
 	}
 
 	r.apps[name] = app
-	log.Printf("Registered sub-app: %s", name)
+	log.Printf("Registered app: %s", name)
 	return nil
 }
 
-// Initialize all registered sub-apps
+// Initialize all registered apps
 func (r *Registry) InitializeAll(ctx context.Context) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	for name, app := range r.apps {
 		if err := app.Initialize(ctx); err != nil {
-			return fmt.Errorf("failed to initialize sub-app %s: %w", name, err)
+			return fmt.Errorf("failed to initialize app %s: %w", name, err)
 		}
 
 		// Register routes
@@ -87,7 +87,7 @@ func (r *Registry) GetHandler(pattern string) (http.HandlerFunc, bool) {
 	return handler, exists
 }
 
-// ListApps returns all registered sub-app names
+// ListApps returns all registered app names
 func (r *Registry) ListApps() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -99,7 +99,7 @@ func (r *Registry) ListApps() []string {
 	return names
 }
 
-// GetApp returns a sub-app by name (for health checks, etc.)
+// GetApp returns a app by name (for health checks, etc.)
 func (r *Registry) GetApp(name string) (App, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -108,7 +108,7 @@ func (r *Registry) GetApp(name string) (App, bool) {
 	return app, exists
 }
 
-// Shutdown gracefully shuts down all sub-apps
+// Shutdown gracefully shuts down all apps
 func (r *Registry) Shutdown(ctx context.Context) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -116,7 +116,7 @@ func (r *Registry) Shutdown(ctx context.Context) error {
 	var lastErr error
 	for name, app := range r.apps {
 		if err := app.Shutdown(ctx); err != nil {
-			log.Printf("Error shutting down sub-app %s: %v", name, err)
+			log.Printf("Error shutting down app %s: %v", name, err)
 			lastErr = err
 		}
 	}

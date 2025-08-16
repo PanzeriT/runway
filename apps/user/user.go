@@ -10,7 +10,7 @@ import (
 	"github.com/panzerit/runway/registry"
 )
 
-// Register this sub-app during package initialization
+// Register this app during package initialization
 func init() {
 	if err := registry.Register(&UserApp{}); err != nil {
 		log.Fatal("Failed to register UserApp:", err)

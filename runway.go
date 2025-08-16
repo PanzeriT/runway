@@ -16,6 +16,7 @@ import (
 	"github.com/panzerit/runway/asset"
 	"github.com/panzerit/runway/handler"
 	"github.com/panzerit/runway/model"
+	"github.com/panzerit/runway/registry"
 	"github.com/panzerit/runway/service"
 	"github.com/panzerit/runway/template/page"
 	"gorm.io/gorm"
@@ -67,6 +68,8 @@ func New(name, jwtSecret string, db *gorm.DB) *Runway {
 	app.server.StaticFS("/", echo.MustSubFS(asset.FS, "./"))
 	app.addPublicRoutes()
 	app.addPrivateRoutes()
+
+	registry.GetRegistry().InitializeAll(context.Background())
 
 	return app
 }
