@@ -6,14 +6,25 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/panzerit/runway/apps"
 	"github.com/panzerit/runway/registry"
 )
 
+// Register this sub-app during package initialization
+func init() {
+	if err := registry.Register(&UserApp{}); err != nil {
+		log.Fatal("Failed to register UserApp:", err)
+	}
+}
+
 type UserApp struct {
+	apps.App
 	initialized bool
 }
 
-func (u *UserApp) Name() string { return "users" }
+func (u *UserApp) Name() string {
+	return "user"
+}
 
 func (u *UserApp) Routes() map[string]http.HandlerFunc {
 	return map[string]http.HandlerFunc{
@@ -49,11 +60,4 @@ func (u *UserApp) listUsers(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserApp) createUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Create user in UserApp")
-}
-
-// Register this sub-app during package initialization
-func init() {
-	if err := registry.Register(&UserApp{}); err != nil {
-		log.Fatal("Failed to register UserApp:", err)
-	}
 }
