@@ -97,18 +97,9 @@ func (a *Runway) addPublicRoutes() {
 	slog.Info("adding public routes")
 	a.Router.GET("/", indexHandler)
 	a.Router.GET("/routes", a.Routes)
-	// a.server.GET("/", a.introHandler)
+	a.Router.POST("/post-test", indexHandler)
 	// a.server.GET("/login", a.getLoginHandler)
 	// a.server.POST("/login", a.postLoginHandler)
-}
-
-func (a *Runway) Routes(w http.ResponseWriter, r *http.Request) {
-	// This is a simple handler to demonstrate the custom router
-	fmt.Fprintf(w, "Custom Router: %s %s\n", r.Method, r.URL.Path)
-
-	for i, route := range a.Router.GetRoutes() {
-		fmt.Fprintf(w, "%d: %s\n", i, route)
-	}
 }
 
 func (a *Runway) addPrivateRoutes() {

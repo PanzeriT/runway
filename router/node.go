@@ -60,21 +60,6 @@ func (n *node) search(parts []string, params map[string]string) HandlerFunc {
 	return nil
 }
 
-func (n *node) getSubRoutes(base string) []string {
-	routes := []string{}
-
-	path := base + "/" + n.part
-	if n.handler != nil {
-		routes = append(routes, strings.TrimRight(path, "/"))
-	}
-
-	for _, child := range n.children {
-		routes = append(routes, child.getSubRoutes(path)...)
-	}
-
-	return routes
-}
-
 func (n *node) matchChild(part string) *node {
 	for _, child := range n.children {
 		if child.part == part || child.isParam || child.isWild {

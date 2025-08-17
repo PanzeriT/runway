@@ -21,7 +21,7 @@ func TestNode(t *testing.T) {
 	route2 := "test/with/another/route/"
 	r.GET(route2, routePrintingHandlerFunc(route2))
 
-	routesFromNode := r.GetRoutes()
+	routesFromNode := r.GetRoutes(GET)
 	if routesFromNode[0]+"/" != "//"+route1 {
 		t.Errorf("cannot find route1: %s; found: %s", route1, routesFromNode[0])
 	}

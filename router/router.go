@@ -2,12 +2,12 @@ package router
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"strings"
 )
 
-// Router represents our custom router
+var AllowedMethods = []method{GET, POST} // TODO: add PUT, DELETE, PATCH, HEAD, OPTIONS
+
 type Router struct {
 	tree map[method]*node
 }
@@ -19,8 +19,7 @@ func New() *Router {
 	}
 
 	// initialize the trees for all allowed HTTP methods
-	allowedMethods := []method{GET, POST} // TODO: add PUT, DELETE, PATCH, HEAD, OPTIONS
-	for _, m := range allowedMethods {
+	for _, m := range AllowedMethods {
 		r.tree[m] = &node{}
 	}
 
@@ -36,13 +35,8 @@ func (r *Router) POST(pattern string, handler HandlerFunc) {
 }
 
 func (r *Router) Handle(method method, path string, handler HandlerFunc) {
-	slog.Info("registering route", "method", method, "path", path)
 	parts := strings.Split(strings.Trim(path, "/"), "/")
-
 	r.tree[method].insert(parts, handler)
-
-	routes := r.tree[method].getSubRoutes("/")
-	slog.Info("currently registered routes", "routes", routes)
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -66,6 +60,42 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	http.NotFound(w, req)
 }
 
-func (r *Router) GetRoutes() []string {
-	return r.tree[GET].getSubRoutes("")
+func (r *Router) GetRoutes(method method) []string {
+	paths := []string{}
+	root := r.tree[method]
+
+	var collect func(n *node, path string)
+	collect = func(n *node, path string) {
+		if n == nil {
+			return
+		}
+		if n.handler != nil {
+			paths = append(paths, path)
+		}
+		for _, child := range n.children {
+			collect(child, path+"/"+child.part)
+		}
+	}
+	collect(root, "")
+	return paths
+}
+
+func (r *Router) GetNodes(method method) []*node {
+	nodes := []*node{}
+	root := r.tree[method]
+
+	// Recursive function to flatten the tree
+	var collect func(n *node)
+	collect = func(n *node) {
+		if n == nil {
+			return
+		}
+		nodes = append(nodes, n)
+		for _, child := range n.children {
+			collect(child)
+		}
+	}
+	collect(root)
+
+	return nodes
 }

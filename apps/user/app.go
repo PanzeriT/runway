@@ -1,4 +1,4 @@
-package users
+package user
 
 import (
 	"log"
@@ -18,6 +18,6 @@ type UserApp struct {
 	apps.Base
 }
 
-func (u *UserApp) Name() string {
+func (a *UserApp) Name() string {
 	return "user"
 }

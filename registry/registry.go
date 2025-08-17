@@ -9,15 +9,11 @@ import (
 	"github.com/panzerit/runway/router"
 )
 
-// App defines the interface that all applications must implement
-type App interface {
-	Name() string
-	Routes() map[string]router.HandlerFunc
-	Initialize(ctx context.Context) error
-	LoadTemplates() error
-	Shutdown(ctx context.Context) error
-	HealthCheck() error
-}
+// Global registry instance
+var (
+	globalRegistry *Registry
+	registryOnce   sync.Once
+)
 
 // Registry manages all registered applications
 type Registry struct {
@@ -25,12 +21,6 @@ type Registry struct {
 	apps     map[string]App
 	handlers map[string]router.HandlerFunc
 }
-
-// Global registry instance
-var (
-	globalRegistry *Registry
-	registryOnce   sync.Once
-)
 
 // GetRegistry returns the singleton registry instance
 func GetRegistry() *Registry {
@@ -63,22 +53,24 @@ func (r *Registry) InitializeAll(ctx context.Context, router *router.Router) err
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	// Setup up all the apps
 	for name, app := range r.apps {
+		// Initialize the app
 		if err := app.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize app %s: %w", name, err)
 		}
 
+		// Load the templates for the app
 		if err := app.LoadTemplates(); err != nil {
 			return fmt.Errorf("failed to load templates for app %s: %w", name, err)
 		}
 
-		// Register routes
-		routes := app.Routes()
-		for pattern, handler := range routes {
-			fullPattern := fmt.Sprintf("/%s%s", name, pattern)
+		// Register the routes of the app
+		for pattern, handler := range app.Routes() {
+			fullPattern := fmt.Sprintf("%s%s", name, pattern)
+			log.Printf("Registering route for app %s: %s", name, pattern)
 			r.handlers[fullPattern] = handler
 			router.GET(fullPattern, handler)
-			log.Printf("Registered route: %s", fullPattern)
 		}
 	}
 

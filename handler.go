@@ -1,29 +1,24 @@
 package runway
 
-// import (
-// 	"io/fs"
-// 	"net/http"
-//
-// 	"github.com/labstack/echo/v4"
-// 	"github.com/labstack/echo/v4/middleware"
-// )
-//
-// func (r *Runway) GET(path string, fn func(c Context) error) {
-// 	r.server.GET(path, fn)
-// }
-//
-// func (r *Runway) POST(path string, fn func(c Context) error) {
-// 	r.server.POST(path, fn)
-// }
-//
-// func (r *Runway) Group(path string) *echo.Group {
-// 	return r.server.Group(path)
-// }
-//
-// func (r *Runway) StaticFS(path string, fs fs.FS) {
-// 	r.Group(path).Use(middleware.StaticWithConfig(middleware.StaticConfig{
-// 		HTML5:      true,
-// 		Root:       path,
-// 		Filesystem: http.FS(fs),
-// 	}))
-// }
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/panzerit/runway/router"
+)
+
+func (a *Runway) Routes(w http.ResponseWriter, r *http.Request) {
+	for _, method := range router.AllowedMethods {
+		fmt.Fprintf(w, "\n\nRoutes for %s:\n", method)
+		for i, route := range a.Router.GetRoutes(method) {
+			fmt.Fprintf(w, "%d: %s\n", i, route)
+		}
+	}
+
+	for _, method := range router.AllowedMethods {
+		fmt.Fprintf(w, "\n\nNodes for %s:\n", method)
+		for i, node := range a.Router.GetNodes(method) {
+			fmt.Fprintf(w, "%d: %#v\n", i, *node)
+		}
+	}
+}
