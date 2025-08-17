@@ -22,11 +22,11 @@ import (
 type AppOption func(*Runway) *Runway
 
 type Runway struct {
+	*router.Router
 	name      string
 	jwtSecret string
 	port      string
 	service   service.Service
-	router    *router.Router
 }
 
 func init() {
@@ -51,7 +51,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
     <html>
         <head><title>Home Page</title></head>
         <body>
-            <h1>Welcome to the Home Page</h1>
+            <h1>Welcome to the Home Page...</h1>
             <p>Using our custom router!</p>
             <p><a href="/user">Go to User Page</a></p>
         </body>
@@ -70,24 +70,20 @@ func New(name, jwtSecret string, db *gorm.DB) *Runway {
 
 	router := router.New()
 
-	router.GET("/", indexHandler)
-	router.GET("/user", indexHandler) // Example user handler, replace with actual user handler\
+	registry := registry.GetRegistry()
+	registry.InitializeAll(context.Background(), router)
 
 	app := &Runway{
+		Router:    router,
 		name:      name,
 		jwtSecret: jwtSecret,
 		service:   svc,
-		router:    router,
 	}
 
+	app.addPublicRoutes()
 	// app.server.HTTPErrorHandler = app.customHTTPErrorHandler
 	// app.server.StaticFS("/", echo.MustSubFS(asset.FS, "./"))
-	// app.addPublicRoutes()
 	// app.addPrivateRoutes()
-
-	r := registry.GetRegistry()
-
-	r.InitializeAll(context.Background(), app.router)
 
 	return app
 }
@@ -98,9 +94,21 @@ func (a *Runway) SetPort(port int) *Runway {
 }
 
 func (a *Runway) addPublicRoutes() {
+	slog.Info("adding public routes")
+	a.Router.GET("/", indexHandler)
+	a.Router.GET("/routes", a.Routes)
 	// a.server.GET("/", a.introHandler)
 	// a.server.GET("/login", a.getLoginHandler)
 	// a.server.POST("/login", a.postLoginHandler)
+}
+
+func (a *Runway) Routes(w http.ResponseWriter, r *http.Request) {
+	// This is a simple handler to demonstrate the custom router
+	fmt.Fprintf(w, "Custom Router: %s %s\n", r.Method, r.URL.Path)
+
+	for i, route := range a.Router.GetRoutes() {
+		fmt.Fprintf(w, "%d: %s\n", i, route)
+	}
 }
 
 func (a *Runway) addPrivateRoutes() {
@@ -126,7 +134,7 @@ func (a *Runway) addPrivateRoutes() {
 func (a *Runway) Start() {
 	s := http.Server{
 		Addr:        a.port,
-		Handler:     a.router,
+		Handler:     a.Router,
 		ReadTimeout: 30 * time.Second,
 	}
 

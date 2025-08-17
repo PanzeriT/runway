@@ -1,96 +1,71 @@
 package router
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"strings"
 )
 
-// HandlerFunc represents a custom handler function
-type HandlerFunc func(http.ResponseWriter, *http.Request)
-
-// Route represents a single route
-type Route struct {
-	Method  string
-	Path    string
-	Handler HandlerFunc
-}
-
 // Router represents our custom router
 type Router struct {
-	routes []Route
+	tree map[method]*node
 }
 
 // New creates a new router instance
 func New() *Router {
-	return &Router{
-		routes: make([]Route, 0),
+	r := &Router{
+		tree: make(map[method]*node),
 	}
+
+	// initialize the trees for all allowed HTTP methods
+	allowedMethods := []method{GET, POST} // TODO: add PUT, DELETE, PATCH, HEAD, OPTIONS
+	for _, m := range allowedMethods {
+		r.tree[m] = &node{}
+	}
+
+	return r
 }
 
-// GET registers a GET route
-func (r *Router) GET(path string, handler HandlerFunc) {
-	r.routes = append(r.routes, Route{
-		Method:  "GET",
-		Path:    path,
-		Handler: handler,
-	})
+func (r *Router) GET(pattern string, handler HandlerFunc) {
+	r.Handle(GET, pattern, handler)
 }
 
-// POST registers a POST route
-func (r *Router) POST(path string, handler HandlerFunc) {
-	r.routes = append(r.routes, Route{
-		Method:  "POST",
-		Path:    path,
-		Handler: handler,
-	})
+func (r *Router) POST(pattern string, handler HandlerFunc) {
+	r.Handle(POST, pattern, handler)
 }
 
-// ServeHTTP implements the http.Handler interface
+func (r *Router) Handle(method method, path string, handler HandlerFunc) {
+	slog.Info("registering route", "method", method, "path", path)
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+
+	r.tree[method].insert(parts, handler)
+
+	routes := r.tree[method].getSubRoutes("/")
+	slog.Info("currently registered routes", "routes", routes)
+}
+
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	slog.Info("Received request", req.Method, req.URL.Path)
-	// Find matching route
-	for _, route := range r.routes {
-		if r.matchRoute(route, req) {
-			route.Handler(w, req)
-			return
-		}
+	path := strings.Trim(req.URL.Path, "/")
+	parts := []string{}
+	if path != "" {
+		parts = strings.Split(path, "/")
 	}
 
-	// No route found - return 404
+	root := r.tree[method(req.Method)]
+	params := make(map[string]string)
+	handler := root.search(parts, params)
+
+	if handler != nil {
+		// wrap request with params in context
+		ctx := context.WithValue(req.Context(), "params", params)
+		handler(w, req.WithContext(ctx))
+		return
+	}
+
 	http.NotFound(w, req)
 }
 
-// matchRoute checks if a route matches the request
-func (r *Router) matchRoute(route Route, req *http.Request) bool {
-	// Check HTTP method
-	if route.Method != req.Method {
-		return false
-	}
-
-	// Check path
-	return r.matchPath(route.Path, req.URL.Path)
-}
-
-// matchPath checks if the route path matches the request path
-func (r *Router) matchPath(routePath, requestPath string) bool {
-	// Clean paths (remove trailing slashes except for root)
-	routePath = r.cleanPath(routePath)
-	requestPath = r.cleanPath(requestPath)
-
-	return routePath == requestPath
-}
-
-// cleanPath normalizes a path
-func (r *Router) cleanPath(path string) string {
-	if path == "" {
-		return "/"
-	}
-
-	// Remove trailing slash unless it's root
-	if path != "/" && strings.HasSuffix(path, "/") {
-		path = strings.TrimSuffix(path, "/")
-	}
-
-	return path
+func (r *Router) GetRoutes() []string {
+	return r.tree[GET].getSubRoutes("")
 }
