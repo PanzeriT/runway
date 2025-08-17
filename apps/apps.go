@@ -16,41 +16,42 @@ type Base struct {
 	Initialized bool
 }
 
-func (a *Base) Initialize(ctx context.Context) error {
+func (b *Base) Initialize(ctx context.Context) error {
 	log.Println("Initializing UserApp...")
 
 	// Initialize database connections, etc.
-	a.Initialized = true
+	b.Initialized = true
 	return nil
 }
 
-func (a *Base) Routes() map[string]router.HandlerFunc {
+func (b *Base) Routes() map[string]router.HandlerFunc {
 	return map[string]router.HandlerFunc{}
 }
 
-func (a *Base) Shutdown(ctx context.Context) error {
+func (b *Base) Shutdown(ctx context.Context) error {
 	log.Println("Shutting down UserApp...")
 	// Clean up resources
-	a.Initialized = false
+	b.Initialized = false
 	return nil
 }
 
-func (a *Base) HealthCheck() error {
-	if !a.Initialized {
+func (b *Base) HealthCheck() error {
+	if !b.Initialized {
 		return fmt.Errorf("UserApp not initialized")
 	}
 	return nil
 }
 
 // LoadTemplates combines layouts, pages, and partials into a map of templates
-func (a *Base) LoadTemplates() error {
+func (b *Base) LoadTemplates() error {
+	return nil
 	slog.Info("Loading templates...")
 	// Get all template files
 	layoutFiles, _ := filepath.Glob("apps/root/templates/layouts/*.html")
 	partialFiles, _ := filepath.Glob("apps/root/templates/partials/*.html")
 	pageFiles, _ := filepath.Glob("apps/root/templates/pages/*.html")
 
-	a.Templates = make(map[string]*template.Template, len(pageFiles))
+	b.Templates = make(map[string]*template.Template, len(pageFiles))
 
 	// Combine base files (layouts + partials)
 	baseFiles := append(layoutFiles, partialFiles...)
@@ -70,8 +71,10 @@ func (a *Base) LoadTemplates() error {
 			return err
 		}
 
+		_ = tmpl
 		slog.Info("  - loaded template", "page", pageName)
-		a.Templates[pageName] = tmpl
+		// a.Templates[pageName] = tmpl
+		b.Templates[pageName] = template.New("<h1>" + pageName + "</h1>") // Placeholder for actual template parsing
 
 	}
 

@@ -38,7 +38,7 @@ func (r *Registry) Register(app App) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	name := app.Name()
+	name := InferName(app)
 	if _, exists := r.apps[name]; exists {
 		return fmt.Errorf("app %s already registered", name)
 	}
